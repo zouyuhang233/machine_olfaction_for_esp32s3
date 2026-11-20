@@ -53,7 +53,10 @@ C:\Users\zyh\Desktop\machine_olfaction_for_esp32s3\
 ```
 
 - **上位机不在本目录**（历史上与固件并列放在父目录，现已分离），源码为 Qt 6.11.1 Widgets + SerialPort + Charts，约 3594 行，桌面有 `机器嗅觉上位机.exe`（14.7 MB）。
-- 三个代码/硬件目录**都还不是 git 仓库**（.gitignore 已就绪）。
+- **本目录已是 git 仓库**（2026-11-20 建立），远端 `git@github.com:zouyuhang233/machine_olfaction_for_esp32s3.git`，分支 `main`。
+  - 走 **SSH**（本机 `github.com:443` 被墙，SSH 22 通）；本机公钥 `~/.ssh/id_ed25519.pub` 已加入 GitHub 账号。
+  - 首次提交 `9fdcc6e`，50 个文件约 28 MB；`build/`（117 MB）、`sdkconfig` 等生成物已在根 `.gitignore` 排除。
+  - 提交身份：`zouyuhang233 <zouyuhang233@users.noreply.github.com>`。
 - 课题材料**已全部在本项目内**，桌面原 `C:\Users\zyh\Desktop\选题\` 已不存在，旧文档里的该路径作废。
 
 ## 3. 硬件选型与采购状态
@@ -237,6 +240,7 @@ BME690 寄存器只给 **gas resistance Rs、温度、湿度、气压**。
 | 2026-11-15 | 主控板原理图 v1 完成 + 评审对比图（11 条问题） |
 | 2026-11-16 | 整机 BOM V1.0 定稿（841.86 元） |
 | 2026-11-19 | 淘宝下单 BME690 裸片 41.58；整理器件文档（ST7735S 资料、SU-03T 资料、实物照片）；BME690 扩展板 v1.0 PCB 出图并评审；确定"不打板、先模块调试" |
+| **2026-11-20** | 下载 BME690 官方手册并做中文速查；原理图复核通过（CSB 短接 VDDIO、R1/R2=4.7K、C1/C2=100nF、SDO→0x76）；**建立 git 仓库并推送到 GitHub**（首次提交 9fdcc6e） |
 
 ## 13. 待确认 / 待办
 
@@ -246,7 +250,7 @@ BME690 寄存器只给 **gas resistance Rs、温度、湿度、气压**。
 - [ ] 补订 1 颗 BME690 作备份。
 - [ ] BOM 更新：BME690 75.17→41.58、屏幕 ST7789 2.0"→ST7735S 1.8"、删掉 4 个独立按键、音频二选一。
 - [ ] 固件：Modbus RTU 从站 + 传感器采集（0 行 → 待开工）。
-- [ ] git init（三个目录都不是仓库）。
+- [x] git init（**2026-11-20 完成**，已推送到 GitHub `zouyuhang233/machine_olfaction_for_esp32s3`，分支 main）
 - [ ] 需要时把 BME690 官方手册下载到 `器件文档\`。→ ✅ 已完成（2026-11-20）
 - [ ] 收货后读 **Variant_Id（I²C 0xF0）应为 0x02** 确认是 690（Chip_Id 0x61 三款相同，不能区分）。
 - [ ] BME690 扩展板：把 `CSB—电阻—VDDIO` 改成 **0Ω 直连或跳线**（手册 p53 要求 direct connection）；→ ✅ 用户原理图用的**菱形「短接」符号**即直连，已符合，此条撤回（是我误读符号）。
