@@ -31,6 +31,9 @@ LV_FONT_DECLARE(ui_font_ai_ai_font_a2b93e6c2db05d6bbbf6f27d_otf_20);
 LV_FONT_DECLARE(ui_font_ai_ai_font_a2b93e6c2db05d6bbbf6f27d_otf_10);
 LV_FONT_DECLARE(ui_font_ai_ai_font_a2efc8b8e51fbd031a7142a1_ttf_24);
 LV_FONT_DECLARE(ui_font_ai_ai_font_600ee36d62d930b6186ed561_ttf_16);
+LV_FONT_DECLARE(ui_font_prompt_cn_14);
+LV_FONT_DECLARE(ui_font_prompt_cn_16);
+LV_FONT_DECLARE(ui_font_prompt_cn_20);
 
 /* 创建屏幕前加载字体；失败会回收已加载资源。点阵 C 数组直接返回 true。 */
 bool aidogui_fonts_init(void);

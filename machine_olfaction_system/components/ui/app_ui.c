@@ -16,6 +16,7 @@
 #include "ui.h"
 #include "galaxy_effect.h"
 
+
 static const char *TAG = "app_ui";
 
 #define UI_WIDTH 240
@@ -495,7 +496,7 @@ static void show_toast(const char *text)
 
     lv_obj_t *label = lv_label_create(s_toast);
     lv_label_set_text(label, text);
-    lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(label, &ui_font_prompt_cn_16, 0);
     lv_obj_set_style_text_color(label, light ? lv_color_hex(0x17373D) : lv_color_hex(0xD7E8EB), 0);
     lv_obj_center(label);
     lv_obj_set_style_opa(s_toast, LV_OPA_TRANSP, 0);
@@ -557,7 +558,7 @@ static void confirm_execute(void)
         lv_obj_invalidate(lv_screen_active());
         lv_obj_invalidate(lv_layer_top());
         refresh_values_for(s_screen_id);
-        show_toast("RESET DONE");
+        show_toast("已恢复默认");
     } else if (action == CONFIRM_REBOOT) {
         esp_restart();
     }
@@ -595,12 +596,12 @@ static void open_confirm(confirm_mode_t mode)
     lv_obj_set_style_shadow_opa(panel, 80, 0);
 
     lv_obj_t *title = lv_label_create(panel);
-    lv_label_set_text(title, mode == CONFIRM_REBOOT ? "REBOOT" : "RESET?");
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_20, 0);
+    lv_label_set_text(title, mode == CONFIRM_REBOOT ? "重启设备" : "恢复默认？");
+    lv_obj_set_style_text_font(title, &ui_font_prompt_cn_20, 0);
     lv_obj_set_style_text_color(title, light ? lv_color_hex(0x17373D) : lv_color_hex(0xD7E8EB), 0);
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
 
-    static const char *button_text[2] = {"CANCEL", "OK"};
+    static const char *button_text[2] = {"取消", "确定"};
     for (int i = 0; i < 2; i++) {
         s_confirm_buttons[i] = lv_obj_create(panel);
         lv_obj_remove_style_all(s_confirm_buttons[i]);
@@ -610,14 +611,14 @@ static void open_confirm(confirm_mode_t mode)
         lv_obj_set_style_radius(s_confirm_buttons[i], 4, 0);
         s_confirm_labels[i] = lv_label_create(s_confirm_buttons[i]);
         lv_label_set_text(s_confirm_labels[i], button_text[i]);
-        lv_obj_set_style_text_font(s_confirm_labels[i], &lv_font_montserrat_16, 0);
+        lv_obj_set_style_text_font(s_confirm_labels[i], &ui_font_prompt_cn_16, 0);
         lv_obj_center(s_confirm_labels[i]);
     }
 
     lv_obj_t *hint = lv_label_create(panel);
-    lv_label_set_text(hint, "ARROWS SELECT  OK  BACK");
-    lv_obj_set_style_text_font(hint, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(hint, light ? lv_color_hex(0x5A7276) : lv_color_hex(0x6D828A), 0);
+    lv_label_set_text(hint, "方向键选择  确认 / 返回");
+    lv_obj_set_style_text_font(hint, &ui_font_prompt_cn_14, 0);
+    lv_obj_set_style_text_color(hint, light ? lv_color_hex(0x5A7276) : lv_color_hex(0x91AAB0), 0);
     lv_obj_align(hint, LV_ALIGN_BOTTOM_MID, 0, -8);
     update_confirm_visual();
     lv_obj_set_style_opa(s_confirm_overlay, LV_OPA_TRANSP, 0);
@@ -741,16 +742,17 @@ static void refresh_network(ui_screen_id_t id)
     bool enabled = net_wifi_enabled();
     bool connected = net_wifi_connected();
     bool light = id == SCR_NETWORK_LIGHT;
-    const char *status = !enabled ? "OFF" : (connected ? "ONLINE" : "WAIT");
+    const char *status = !enabled ? "已关闭" : (connected ? "已连接" : "连接中");
     lv_color_t status_color = connected ? (light ? lv_color_hex(0x08745D) : lv_color_hex(0x8BEFD2))
                                         : (enabled ? (light ? lv_color_hex(0x8A5A00) : lv_color_hex(0xFBBF24))
-                                                   : (light ? lv_color_hex(0x5A7276) : lv_color_hex(0x6D828A)));
+                                                   : (light ? lv_color_hex(0x5A7276) : lv_color_hex(0x91AAB0)));
     if (id == SCR_NETWORK_DARK) {
         set_label_text(aidogui_ui.networkdark.Value52, status);
         set_label_text(aidogui_ui.networkdark.Value148, net_ip());
         set_switch_checked(aidogui_ui.networkdark.WifiSwitch, enabled);
         if (object_ok(aidogui_ui.networkdark.Value52)) {
             lv_obj_set_style_text_color(aidogui_ui.networkdark.Value52, status_color, 0);
+            lv_obj_set_style_text_font(aidogui_ui.networkdark.Value52, &ui_font_prompt_cn_16, 0);
         }
     } else if (id == SCR_NETWORK_LIGHT) {
         set_label_text(aidogui_ui.networklight.Value52, status);
@@ -758,6 +760,7 @@ static void refresh_network(ui_screen_id_t id)
         set_switch_checked(aidogui_ui.networklight.WifiSwitch, enabled);
         if (object_ok(aidogui_ui.networklight.Value52)) {
             lv_obj_set_style_text_color(aidogui_ui.networklight.Value52, status_color, 0);
+            lv_obj_set_style_text_font(aidogui_ui.networklight.Value52, &ui_font_prompt_cn_16, 0);
         }
     }
 }
@@ -766,15 +769,16 @@ static void refresh_ble(ui_screen_id_t id)
 {
     bool enabled = net_ble_enabled();
     bool light = id == SCR_BLE_LIGHT;
-    const char *status = enabled ? "广播中" : "OFF";
+    const char *status = enabled ? "广播中" : "已关闭";
     lv_color_t color = enabled ? (light ? lv_color_hex(0x08745D) : lv_color_hex(0x8BEFD2))
-                               : (light ? lv_color_hex(0x5A7276) : lv_color_hex(0x6D828A));
+                               : (light ? lv_color_hex(0x5A7276) : lv_color_hex(0x91AAB0));
     if (id == SCR_BLE_DARK) {
         set_label_text(aidogui_ui.bledark.Value100, status);
         set_label_text(aidogui_ui.bledark.Value148, net_ble_name());
         set_switch_checked(aidogui_ui.bledark.BleSwitch, enabled);
         if (object_ok(aidogui_ui.bledark.Value100)) {
             lv_obj_set_style_text_color(aidogui_ui.bledark.Value100, color, 0);
+            lv_obj_set_style_text_font(aidogui_ui.bledark.Value100, &ui_font_prompt_cn_16, 0);
         }
     } else if (id == SCR_BLE_LIGHT) {
         set_label_text(aidogui_ui.blelight.Value100, status);
@@ -782,6 +786,7 @@ static void refresh_ble(ui_screen_id_t id)
         set_switch_checked(aidogui_ui.blelight.BleSwitch, enabled);
         if (object_ok(aidogui_ui.blelight.Value100)) {
             lv_obj_set_style_text_color(aidogui_ui.blelight.Value100, color, 0);
+            lv_obj_set_style_text_font(aidogui_ui.blelight.Value100, &ui_font_prompt_cn_16, 0);
         }
     }
 }
@@ -983,14 +988,14 @@ static void toggle_wifi(void)
 {
     net_wifi_set_enabled(!net_wifi_enabled());
     refresh_network(s_screen_id);
-    show_toast(net_wifi_enabled() ? "WIFI ON" : "WIFI OFF");
+    show_toast(net_wifi_enabled() ? "无线网络已开启" : "无线网络已关闭");
 }
 
 static void toggle_ble(void)
 {
     net_ble_set_enabled(!net_ble_enabled());
     refresh_ble(s_screen_id);
-    show_toast(net_ble_enabled() ? "BLE ON" : "BLE OFF");
+    show_toast(net_ble_enabled() ? "蓝牙已开启" : "蓝牙已关闭");
 }
 
 static void audio_adjust(int delta)
@@ -1024,7 +1029,7 @@ static void rotate_display(int direction)
     lv_obj_invalidate(lv_screen_active());
     lv_obj_invalidate(lv_layer_top());
     refresh_display(s_screen_id);
-    show_toast("ROTATE");
+    show_toast("屏幕已旋转");
 }
 
 static void cycle_baud(int direction)
@@ -1042,7 +1047,7 @@ static void cycle_baud(int direction)
     modbus_set_baud(bauds[next]);
     refresh_system(s_screen_id);
     char text[24];
-    snprintf(text, sizeof(text), "BAUD %lu", (unsigned long)bauds[next]);
+    snprintf(text, sizeof(text), "波特率 %lu", (unsigned long)bauds[next]);
     show_toast(text);
 }
 
@@ -1123,19 +1128,19 @@ static void handle_audio_key(button_id_t key, bool repeat)
             refresh_audio(s_screen_id);
         } else if (s_focus_index == 2) {
             audio_play_test();
-            show_toast("TEST PLAY");
+            show_toast("正在播放测试音");
         }
     } else if (key == BTN_OK) {
         if (s_focus_index == 0) {
             s_edit_mode = EDIT_VOLUME;
-            show_toast("ARROWS ADJUST  OK SAVE");
+            show_toast("方向键调节  确认键保存");
         } else if (s_focus_index == 1) {
             audio_set_prompt_enabled(!audio_prompt_enabled());
             refresh_audio(s_screen_id);
-            show_toast(audio_prompt_enabled() ? "PROMPT ON" : "PROMPT OFF");
+            show_toast(audio_prompt_enabled() ? "提示音已开启" : "提示音已关闭");
         } else if (s_focus_index == 2) {
             audio_play_test();
-            show_toast("TEST PLAY");
+            show_toast("正在播放测试音");
         }
     } else if (key == BTN_BACK) {
         navigate_to(screen_uses_light(s_screen_id) ? SCR_MENU_LIGHT : SCR_MENU_DARK,
@@ -1183,7 +1188,7 @@ static void handle_display_key(button_id_t key, bool repeat)
             rotate_display(1);
         } else if (s_focus_index == 2) {
             s_edit_mode = EDIT_BRIGHTNESS;
-            show_toast("ARROWS ADJUST  OK SAVE");
+            show_toast("方向键调节  确认键保存");
         } else if (s_focus_index == 3) {
             app_ui_screen_off();
         }
@@ -1252,11 +1257,11 @@ static void handle_key(button_id_t key, bool repeat)
         else if (key == BTN_LEFT && net_wifi_enabled()) {
             net_wifi_set_enabled(false);
             refresh_network(s_screen_id);
-            show_toast("WIFI OFF");
+            show_toast("无线网络已关闭");
         } else if (key == BTN_RIGHT && !net_wifi_enabled()) {
             net_wifi_set_enabled(true);
             refresh_network(s_screen_id);
-            show_toast("WIFI ON");
+            show_toast("无线网络已开启");
         }
         else if (key == BTN_BACK) {
             navigate_to(s_screen_id == SCR_NETWORK_DARK ? SCR_MENU_DARK : SCR_MENU_LIGHT,
@@ -1269,11 +1274,11 @@ static void handle_key(button_id_t key, bool repeat)
         else if (key == BTN_LEFT && net_ble_enabled()) {
             net_ble_set_enabled(false);
             refresh_ble(s_screen_id);
-            show_toast("BLE OFF");
+            show_toast("蓝牙已关闭");
         } else if (key == BTN_RIGHT && !net_ble_enabled()) {
             net_ble_set_enabled(true);
             refresh_ble(s_screen_id);
-            show_toast("BLE ON");
+            show_toast("蓝牙已开启");
         }
         else if (key == BTN_BACK) {
             navigate_to(s_screen_id == SCR_BLE_DARK ? SCR_MENU_DARK : SCR_MENU_LIGHT,
@@ -1417,7 +1422,7 @@ esp_err_t app_ui_init(void)
     galaxy_effect_init();
     create_focus_ring();
     sync_screen();
-    show_toast("ARROWS SELECT  OK  BACK");
+    show_toast("方向键选择  确认 / 返回");
 
     s_input_timer = lv_timer_create(input_timer_cb, 10, NULL);
     s_value_timer = lv_timer_create(value_timer_cb, 500, NULL);
