@@ -8,18 +8,20 @@
 
 | 项 | 状态 |
 |---|---|
-| 编译 | ✅ 通过（2026-11-22 17:17，`machine_olfaction_system.bin` 251,904 B） |
-| 显示 | ✅ 横屏 160×128，8x12 字库居中显示 `zyh`（ST7735S，18 位 RGB666，SPI 1 MHz） |
-| 业务代码 | 显示子系统已完成；BME690 采集 / 按键 / 推理 / Modbus ❌ 未开始 |
-| 下一步 | BME690 I²C 采集 → 按键 K1–K4 → Modbus RTU 从站 |
+| 编译 | ✅ 通过（2026-11-24，本机 ESP-IDF 5.5.6 验证，BME690 版本 `machine_olfaction_system.bin` **289,616 B / 0x46B50**；工程原定 5.1.2，代码使用 5.1 兼容 API） |
+| 显示 | ✅ 横屏 160×128，ST7735S 18 位 RGB666；当前显示 BME690 的 T/H/P/Rs（启动/失败时显示 init/ERR 状态） |
+| BME690 | 🟡 驱动/自检已写入（`components/bme690`），等待硬件实测；上电自动读 ID、温湿度、气压、300°C Rs 并显示 |
+| 业务代码 | BME690 采集进行中；按键 / 推理 / Modbus ❌ 未开始 |
+| 下一步 | BME690 硬件 bring-up（按 `器件文档\BME690\BME690_使用与调试指南.md`）→ 按键 K1–K4 → Modbus RTU 从站 |
 
 ## 目录
 
 ```
-main/app_main.c      应用层：初始化 → 横屏 → 画 zyh
+main/app_main.c      应用层：屏显 + BME690 每秒采集/自检
 components/bsp/      引脚 / SPI 总线(DMA) / 背光 / 复位
 components/lcd/      ST7735S 18 位驱动 + 旋转 + 帧缓冲 + 画点/画字
 components/font/     8x16 / 8x12 ASCII 点阵字库
+components/bme690/   BME690 驱动：Bosch BME69X SensorAPI + ESP-IDF I²C 适配
 sdkconfig.defaults   配置权威：改配置改这里，再删 sdkconfig 重新 set-target
 sdkconfig            生成物（已 gitignore）
 partitions.csv       分区表：nvs 24K / phy_init 4K / factory 4M / storage ~11.7M(fat) / coredump 512K
@@ -30,6 +32,8 @@ build/               构建产物（已 gitignore）
 
 工具链：`C:\Espressif\frameworks\esp-idf-v5.1.2`，Python env `C:\Espressif\python_env\idf5.1_py3.11_env`，
 `xtensa-esp32s3-elf\esp-12.2.0_20230208`，cmake 3.24.0，ninja 1.10.2。
+
+> 2026-11-24 本机验证使用 **ESP-IDF v5.5.6**（`D:\Espressif\v5.5.6\esp-idf`）；BME690 组件刻意只用 v5.1 也有的 legacy `driver/i2c.h` API，可在原 5.1.2 环境直接构建。
 
 ### 三个必须知道的坑
 
@@ -43,6 +47,15 @@ build/               构建产物（已 gitignore）
 
 1. **SPI 总线必须开 DMA**：ESP-IDF 在 CPU 模式下单次传输上限只有 512 bit（64 字节），横屏一行 `160×3=480` 字节会被驱动直接拒绝；`lcd_cmd/lcd_data` 已加 `ESP_ERROR_CHECK`，失败会直接报错而不是静默花屏。
 2. **18 位像素格式**：ST7735S 复位后 COLMOD 默认 `0x06`（18 位/pixel，手册 10.1.33）。每像素 3 字节，每字节 D7/D6=0、颜色 6 位在 D5–D0（手册 9.8.4）；按 16 位发会出现「约 3 行一循环」的斜纹。
+
+### BME690 接线与调试
+
+- 接线：SDA=**GPIO8**、SCL=**GPIO18**、地址 **0x76**（SDO→GND）；CSB 直连 VDDIO，SDA/SCL 各 4.7k 上拉到 VDDIO，VDD/VDDIO 各 100nF 去耦。
+- 上电日志：
+  - 正常：`bme690: BME690 初始化成功: chip_id=0x61 variant_id=0x02`
+  - 异常：`bme690: bme69x_init 失败: E_COM_FAIL(I2C?)` → 先查 CSB、上拉、SDO、供电。
+- 屏幕：正常显示 `BME690 OK` + T/H/P/Rs；没接/失败显示 `BME690 ERR` 并每 2 秒重试，不会死机。
+- 完整调试阶梯、寄存器表、故障排查见 **`..\器件文档\BME690\BME690_使用与调试指南.md`**。
 
 ### 命令模板
 
@@ -62,7 +75,7 @@ export PATH="/c/Espressif/tools/xtensa-esp32s3-elf/esp-12.2.0_20230208/xtensa-es
 - `CONFIG_ESPTOOLPY_FLASHMODE_QIO=y` 但 `ESPTOOLPY_FLASHMODE` 字符串仍是 `"dio"` —— **不是 bug**，烧写用 dio、启动后自升 QIO。
 - **`FREERTOS_HZ=1000` 是硬需求**：Modbus RTU 帧间静默 ≥3.5 字符 = 4ms@115200；默认 100Hz tick 下 `pdMS_TO_TICKS(4)` 会退化成 10ms，主从同总线时有抢答风险。
 - 目标 `esp32s3`；`.vscode/settings.json` 的 `IDF_TARGET` 已修正（历史上曾是 esp32/esp32s2）。
-- **显示**：`LCD_ROTATION=1` 为横屏 160×128（MADCTL=0xA0）；方向反了改 3。窗口偏移当前 (0,0)。静态画面只刷一帧（1 MHz 下全屏约 0.49 s，反复重刷会闪）。
+- **显示**：`LCD_ROTATION=3` 为当前横屏 160×128（在方向 1 基础上再转 180°，MADCTL 相应调整）；方向不对改 1。窗口偏移当前 (0,0)。静态画面只刷一帧（1 MHz 下全屏约 0.49 s，反复重刷会闪）。
 
 ## 与上位机的联调契约
 

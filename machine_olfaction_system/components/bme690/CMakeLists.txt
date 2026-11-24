@@ -1,0 +1,10 @@
+idf_component_register(
+    SRCS
+        "src/bme690.c"
+        "bosch/bme69x.c"
+    INCLUDE_DIRS
+        "include"
+        "bosch"
+    REQUIRES
+        driver
+)
