@@ -1,7 +1,8 @@
 /*
- * buttons.h -- 6 个按键轮询 + 消抖 + 方向键连发
+ * buttons.h -- 4 个按键轮询 + 消抖 + 左右连发
  *
- * 按下拉低到 GND，GPIO 内部上拉。buttons_poll() 每次返回一个"新按下"事件。
+ * 按键：左 / 右 / 确认 / 返回。按下拉低到 GND，GPIO 内部上拉。
+ * buttons_poll_event() 每次返回一个"新按下"事件。
  */
 #pragma once
 
@@ -12,9 +13,7 @@ extern "C" {
 #endif
 
 typedef enum {
-    BTN_UP = 0,
-    BTN_DOWN,
-    BTN_LEFT,
+    BTN_LEFT = 0,
     BTN_RIGHT,
     BTN_OK,
     BTN_BACK,
@@ -23,7 +22,7 @@ typedef enum {
 
 typedef struct {
     button_id_t id;
-    bool repeat;    /* true 表示按住方向键产生的连发事件 */
+    bool repeat;    /* true 表示按住左/右键产生的连发事件 */
 } button_event_t;
 
 /** 配置 GPIO 为上拉输入。 */
@@ -35,7 +34,7 @@ bool buttons_poll_event(button_event_t *out);
 /** 兼容接口：只返回按键 ID。 */
 bool buttons_poll(button_id_t *out);
 
-/** 取消方向键当前的按住连发状态（用于息屏唤醒后避免误滚动）。 */
+/** 取消左右键当前的按住连发状态（用于息屏唤醒后避免误滚动）。 */
 void buttons_cancel_repeat(void);
 
 #ifdef __cplusplus

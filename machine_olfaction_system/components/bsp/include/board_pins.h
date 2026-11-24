@@ -9,8 +9,9 @@
  *   屏 CS  -> GPIO10     屏 BLK -> GPIO13
  *   BLK 为高电平点亮、低电平关闭，驱动层已按高有效 PWM 处理。
  *
- * 新屏没有板载按键，使用 6 个外接按键：
- *   UP / DOWN / LEFT / RIGHT / OK / BACK
+ * 新屏没有板载按键，使用 4 个外接按键：
+ *   LEFT / RIGHT / OK / BACK
+ *   GPIO21 / GPIO38 不再使用，也不初始化。
  */
 #pragma once
 
@@ -40,10 +41,8 @@
 #define BOARD_BME690_I2C_ADDR 0x76
 #define BOARD_BME690_I2C_HZ   100000
 
-/* ---------------- 6 键（按下拉低到 GND） ---------------- */
-#define BOARD_KEY_UP        GPIO_NUM_4
-#define BOARD_KEY_DOWN      GPIO_NUM_5
+/* ---------------- 4 键（按下拉低到 GND） ---------------- */
 #define BOARD_KEY_LEFT      GPIO_NUM_6
 #define BOARD_KEY_RIGHT     GPIO_NUM_7
-#define BOARD_KEY_OK        GPIO_NUM_21
-#define BOARD_KEY_BACK      GPIO_NUM_38
+#define BOARD_KEY_OK        GPIO_NUM_4
+#define BOARD_KEY_BACK      GPIO_NUM_5

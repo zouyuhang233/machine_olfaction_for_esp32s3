@@ -70,6 +70,8 @@ static bool s_light_theme;
 static edit_mode_t s_edit_mode;
 static bool s_audio_dirty;
 static bool s_brightness_dirty;
+static uint8_t s_edit_audio_backup;
+static uint8_t s_edit_brightness_backup;
 
 static lv_obj_t *s_toast;
 static lv_timer_t *s_toast_timer;
@@ -485,7 +487,7 @@ static void show_toast(const char *text)
     bool light = screen_uses_light(s_screen_id);
     s_toast = lv_obj_create(lv_layer_top());
     lv_obj_remove_style_all(s_toast);
-    lv_obj_set_size(s_toast, 220, 30);
+    lv_obj_set_size(s_toast, 232, 30);
     lv_obj_align(s_toast, LV_ALIGN_BOTTOM_MID, 0, -10);
     lv_obj_remove_flag(s_toast, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(s_toast, light ? lv_color_white() : lv_color_hex(0x081217), 0);
@@ -507,15 +509,31 @@ static void show_toast(const char *text)
 
 static void finish_edit_mode(bool commit)
 {
+    bool need_save = false;
+    bool need_refresh = false;
+
     if (s_audio_dirty) {
-        if (commit) settings_save();
+        if (commit) {
+            need_save = true;
+        } else {
+            settings_get()->volume = s_edit_audio_backup;
+            need_refresh = true;
+        }
         s_audio_dirty = false;
     }
     if (s_brightness_dirty) {
-        if (commit) settings_save();
+        if (commit) {
+            need_save = true;
+        } else {
+            settings_get()->brightness = s_edit_brightness_backup;
+            bsp_backlight_set(s_edit_brightness_backup);
+            need_refresh = true;
+        }
         s_brightness_dirty = false;
     }
+    if (need_save) settings_save();
     s_edit_mode = EDIT_NONE;
+    if (need_refresh) refresh_values_for(s_screen_id);
 }
 
 static void close_confirm(void)
@@ -1053,7 +1071,7 @@ static void cycle_baud(int direction)
 
 static void handle_confirm_key(button_id_t key, bool repeat)
 {
-    if (key == BTN_UP || key == BTN_DOWN || key == BTN_LEFT || key == BTN_RIGHT) {
+    if (key == BTN_LEFT || key == BTN_RIGHT) {
         if (!repeat) {
             s_confirm_choice ^= 1;
             update_confirm_visual();
@@ -1069,9 +1087,9 @@ static void handle_confirm_key(button_id_t key, bool repeat)
 static void handle_menu_key(button_id_t key)
 {
     bool light = screen_uses_light(s_screen_id);
-    if (key == BTN_UP || key == BTN_LEFT) {
+    if (key == BTN_LEFT) {
         focus_move(-1);
-    } else if (key == BTN_DOWN || key == BTN_RIGHT) {
+    } else if (key == BTN_RIGHT) {
         focus_move(1);
     } else if (key == BTN_OK) {
         switch (s_focus_index) {
@@ -1111,29 +1129,21 @@ static void handle_audio_key(button_id_t key, bool repeat)
 {
     (void)repeat;
     if (s_edit_mode == EDIT_VOLUME) {
-        if (key == BTN_UP || key == BTN_RIGHT) audio_adjust(5);
-        else if (key == BTN_DOWN || key == BTN_LEFT) audio_adjust(-5);
-        else if (key == BTN_OK || key == BTN_BACK) finish_edit_mode(true);
+        if (key == BTN_RIGHT) audio_adjust(5);
+        else if (key == BTN_LEFT) audio_adjust(-5);
+        else if (key == BTN_OK) finish_edit_mode(true);
+        else if (key == BTN_BACK) finish_edit_mode(false);
         return;
     }
-    if (key == BTN_UP) {
+    if (key == BTN_LEFT) {
         focus_move(-1);
-    } else if (key == BTN_DOWN) {
+    } else if (key == BTN_RIGHT) {
         focus_move(1);
-    } else if (key == BTN_LEFT || key == BTN_RIGHT) {
-        if (s_focus_index == 0) {
-            audio_adjust(key == BTN_RIGHT ? 5 : -5);
-        } else if (s_focus_index == 1) {
-            audio_set_prompt_enabled(key == BTN_RIGHT);
-            refresh_audio(s_screen_id);
-        } else if (s_focus_index == 2) {
-            audio_play_test();
-            show_toast("正在播放测试音");
-        }
     } else if (key == BTN_OK) {
         if (s_focus_index == 0) {
+            s_edit_audio_backup = audio_volume();
             s_edit_mode = EDIT_VOLUME;
-            show_toast("方向键调节  确认键保存");
+            show_toast("方向键调节  确认保存  返回取消");
         } else if (s_focus_index == 1) {
             audio_set_prompt_enabled(!audio_prompt_enabled());
             refresh_audio(s_screen_id);
@@ -1152,31 +1162,16 @@ static void handle_display_key(button_id_t key, bool repeat)
 {
     (void)repeat;
     if (s_edit_mode == EDIT_BRIGHTNESS) {
-        if (key == BTN_UP || key == BTN_RIGHT) brightness_adjust(10);
-        else if (key == BTN_DOWN || key == BTN_LEFT) brightness_adjust(-10);
-        else if (key == BTN_OK || key == BTN_BACK) finish_edit_mode(true);
+        if (key == BTN_RIGHT) brightness_adjust(10);
+        else if (key == BTN_LEFT) brightness_adjust(-10);
+        else if (key == BTN_OK) finish_edit_mode(true);
+        else if (key == BTN_BACK) finish_edit_mode(false);
         return;
     }
-    if (key == BTN_UP) {
+    if (key == BTN_LEFT) {
         focus_move(-1);
-    } else if (key == BTN_DOWN) {
+    } else if (key == BTN_RIGHT) {
         focus_move(1);
-    } else if (key == BTN_LEFT || key == BTN_RIGHT) {
-        if (s_focus_index == 0) {
-            bool light = key == BTN_RIGHT;
-            if (light != screen_uses_light(s_screen_id)) {
-                s_light_theme = light;
-                s_focus_memory[light ? SCR_DISPLAY_LIGHT : SCR_DISPLAY_DARK] = 0;
-                navigate_to(light ? SCR_DISPLAY_LIGHT : SCR_DISPLAY_DARK,
-                            LV_SCREEN_LOAD_ANIM_FADE_IN);
-            }
-        } else if (s_focus_index == 1) {
-            rotate_display(key == BTN_RIGHT ? 1 : -1);
-        } else if (s_focus_index == 2) {
-            brightness_adjust(key == BTN_RIGHT ? 10 : -10);
-        } else if (s_focus_index == 3) {
-            app_ui_screen_off();
-        }
     } else if (key == BTN_OK) {
         if (s_focus_index == 0) {
             bool light = screen_uses_light(s_screen_id);
@@ -1187,8 +1182,9 @@ static void handle_display_key(button_id_t key, bool repeat)
         } else if (s_focus_index == 1) {
             rotate_display(1);
         } else if (s_focus_index == 2) {
+            s_edit_brightness_backup = settings_get()->brightness;
             s_edit_mode = EDIT_BRIGHTNESS;
-            show_toast("方向键调节  确认键保存");
+            show_toast("方向键调节  确认保存  返回取消");
         } else if (s_focus_index == 3) {
             app_ui_screen_off();
         }
@@ -1200,16 +1196,10 @@ static void handle_display_key(button_id_t key, bool repeat)
 
 static void handle_system_key(button_id_t key)
 {
-    if (key == BTN_UP) {
+    if (key == BTN_LEFT) {
         focus_move(-1);
-    } else if (key == BTN_DOWN) {
+    } else if (key == BTN_RIGHT) {
         focus_move(1);
-    } else if (key == BTN_LEFT || key == BTN_RIGHT) {
-        if (s_focus_index == 0) {
-            cycle_baud(key == BTN_RIGHT ? 1 : -1);
-        } else {
-            focus_move(key == BTN_LEFT ? -1 : 1);
-        }
     } else if (key == BTN_OK) {
         if (s_focus_index == 0) cycle_baud(1);
         else if (s_focus_index == 1) open_confirm(CONFIRM_REBOOT);
@@ -1234,35 +1224,26 @@ static void handle_key(button_id_t key, bool repeat)
         else if (key == BTN_BACK) navigate_menu();
         break;
     case SCR_DETECTION:
-        if (key == BTN_OK || key == BTN_RIGHT) show_result();
-        else if (key == BTN_BACK || key == BTN_LEFT) cancel_measurement();
+        if (key == BTN_OK) show_result();
+        else if (key == BTN_BACK) cancel_measurement();
         break;
     case SCR_RESULT:
-        if (key == BTN_OK || key == BTN_RIGHT) navigate_menu();
-        else if (key == BTN_BACK || key == BTN_LEFT) navigate_home();
+        if (key == BTN_OK) navigate_menu();
+        else if (key == BTN_BACK) navigate_home();
         break;
     case SCR_MENU_DARK:
     case SCR_MENU_LIGHT:
         handle_menu_key(key);
         break;
     case SCR_SENSOR_DARK:
-        if (key == BTN_BACK || key == BTN_LEFT) navigate_to(SCR_MENU_DARK, LV_SCREEN_LOAD_ANIM_MOVE_LEFT);
+        if (key == BTN_BACK) navigate_to(SCR_MENU_DARK, LV_SCREEN_LOAD_ANIM_MOVE_LEFT);
         break;
     case SCR_SENSOR_LIGHT:
-        if (key == BTN_BACK || key == BTN_LEFT) navigate_to(SCR_MENU_LIGHT, LV_SCREEN_LOAD_ANIM_MOVE_LEFT);
+        if (key == BTN_BACK) navigate_to(SCR_MENU_LIGHT, LV_SCREEN_LOAD_ANIM_MOVE_LEFT);
         break;
     case SCR_NETWORK_DARK:
     case SCR_NETWORK_LIGHT:
         if (key == BTN_OK) toggle_wifi();
-        else if (key == BTN_LEFT && net_wifi_enabled()) {
-            net_wifi_set_enabled(false);
-            refresh_network(s_screen_id);
-            show_toast("无线网络已关闭");
-        } else if (key == BTN_RIGHT && !net_wifi_enabled()) {
-            net_wifi_set_enabled(true);
-            refresh_network(s_screen_id);
-            show_toast("无线网络已开启");
-        }
         else if (key == BTN_BACK) {
             navigate_to(s_screen_id == SCR_NETWORK_DARK ? SCR_MENU_DARK : SCR_MENU_LIGHT,
                         LV_SCREEN_LOAD_ANIM_MOVE_LEFT);
@@ -1271,15 +1252,6 @@ static void handle_key(button_id_t key, bool repeat)
     case SCR_BLE_DARK:
     case SCR_BLE_LIGHT:
         if (key == BTN_OK) toggle_ble();
-        else if (key == BTN_LEFT && net_ble_enabled()) {
-            net_ble_set_enabled(false);
-            refresh_ble(s_screen_id);
-            show_toast("蓝牙已关闭");
-        } else if (key == BTN_RIGHT && !net_ble_enabled()) {
-            net_ble_set_enabled(true);
-            refresh_ble(s_screen_id);
-            show_toast("蓝牙已开启");
-        }
         else if (key == BTN_BACK) {
             navigate_to(s_screen_id == SCR_BLE_DARK ? SCR_MENU_DARK : SCR_MENU_LIGHT,
                         LV_SCREEN_LOAD_ANIM_MOVE_LEFT);
@@ -1433,7 +1405,7 @@ esp_err_t app_ui_init(void)
 #if APP_UI_SELF_TEST
     lv_timer_create(selftest_timer_cb, 900, NULL);
 #endif
-    ESP_LOGI(TAG, "AiDoGUI UI + 6 键适配已启动");
+    ESP_LOGI(TAG, "AiDoGUI UI + 4 键适配已启动");
     return ESP_OK;
 }
 

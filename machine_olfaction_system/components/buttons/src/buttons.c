@@ -14,8 +14,7 @@
 static const char *TAG = "buttons";
 
 static const gpio_num_t s_pins[BTN_COUNT] = {
-    BOARD_KEY_UP, BOARD_KEY_DOWN, BOARD_KEY_LEFT,
-    BOARD_KEY_RIGHT, BOARD_KEY_OK, BOARD_KEY_BACK,
+    BOARD_KEY_LEFT, BOARD_KEY_RIGHT, BOARD_KEY_OK, BOARD_KEY_BACK,
 };
 static bool s_raw[BTN_COUNT];
 static bool s_stable[BTN_COUNT];
@@ -24,14 +23,13 @@ static int64_t s_next_repeat_us[BTN_COUNT];
 
 static bool repeats(button_id_t id)
 {
-    return id == BTN_UP || id == BTN_DOWN || id == BTN_LEFT || id == BTN_RIGHT;
+    return id == BTN_LEFT || id == BTN_RIGHT;
 }
 
 void buttons_init(void)
 {
     gpio_config_t cfg = {
-        .pin_bit_mask = (1ULL << BOARD_KEY_UP) | (1ULL << BOARD_KEY_DOWN) |
-                        (1ULL << BOARD_KEY_LEFT) | (1ULL << BOARD_KEY_RIGHT) |
+        .pin_bit_mask = (1ULL << BOARD_KEY_LEFT) | (1ULL << BOARD_KEY_RIGHT) |
                         (1ULL << BOARD_KEY_OK) | (1ULL << BOARD_KEY_BACK),
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = GPIO_PULLUP_ENABLE,
@@ -76,7 +74,7 @@ bool buttons_poll_event(button_event_t *out)
             }
         }
 
-        /* 方向键支持按住连续滚动；确认/返回只触发一次。 */
+        /* 左右键支持按住连续滚动；确认/返回只触发一次。 */
         if (raw && s_stable[i] && repeats((button_id_t)i) &&
             s_next_repeat_us[i] != 0 && now >= s_next_repeat_us[i]) {
             s_next_repeat_us[i] += REPEAT_PERIOD_US;

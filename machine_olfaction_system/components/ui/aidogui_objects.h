@@ -37,11 +37,7 @@ typedef struct {
     lv_obj_t * Spark8;
     lv_obj_t * CtaLabel;
     lv_obj_t * RingConfirm;
-    lv_obj_t * BackAction;
-    lv_obj_t * HomeBackGlyph;
     lv_obj_t * MicGlyph;
-    lv_obj_t * ConfirmAction;
-    lv_obj_t * HomeConfirmGlyph;
     lv_obj_t * HomeStage;
 } aidogui_screen1_objects_t;
 /* 屏幕对象：通过 aidogui_ui.detection 访问，root 是屏幕根对象。 */

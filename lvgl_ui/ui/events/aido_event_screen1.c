@@ -70,50 +70,6 @@ default: aido_flow_error(s, "Invalid instruction pointer"); return 0;
 }} aido_flow_error(s, "Flow instruction budget exceeded"); return 0; }
 static const aido_flow_definition_t aido_flow_a8619cf340ffe7931f96 = { aido_flow_a8619cf340ffe7931f96_run, 0, true, "home_ring_240" };
 
-static int aido_flow_f9c86a0f255639795285_run(aido_flow_state_t * s) {
-lv_event_t * e = s->native_event; (void)e;
-for (unsigned flow_budget = 0; flow_budget < 1024 && !s->failed; ++flow_budget) {
-aidogui_ui_t * ui = (aidogui_ui_t *)s->context; (void)ui;
-switch (s->pc) {
-case 0: {
-s->node = "go_detection";
-if (s->failed) return 0;
-uint32_t flow_generation = s->generation;
-s->pc = 1;
-if (s->failed) return 0;
-ui_detection_screen_init();
-aido_flow_wait_screen(s, ui->detection.root);
-ui_detection_screen_init();
-_ui_screen_change_ex(&ui->detection.root, LV_SCREEN_LOAD_ANIM_FADE_IN, 240, 0, false, false);
-if (s->failed) return 0; if (flow_generation != s->generation) return 1;
-if (aido_flow_is_waiting(s)) return 1;
-continue;
-}
-case 1: {
-s->node = "wait_scan";
-aido_flow_value_t flow_value_0 = aido_flow_number(s, 1, 3200);
-s->pc = 2; return aido_flow_delay(s, flow_value_0);
-}
-case 2: {
-s->node = "show_result";
-if (s->failed) return 0;
-uint32_t flow_generation = s->generation;
-s->pc = 3;
-if (s->failed) return 0;
-ui_result_screen_init();
-aido_flow_wait_screen(s, ui->result.root);
-ui_result_screen_init();
-_ui_screen_change_ex(&ui->result.root, LV_SCREEN_LOAD_ANIM_FADE_IN, 300, 0, false, false);
-if (s->failed) return 0; if (flow_generation != s->generation) return 1;
-if (aido_flow_is_waiting(s)) return 1;
-continue;
-}
-case 3: {
-return 0;
-}
-default: aido_flow_error(s, "Invalid instruction pointer"); return 0;
-}} aido_flow_error(s, "Flow instruction budget exceeded"); return 0; }
-static const aido_flow_definition_t aido_flow_f9c86a0f255639795285 = { aido_flow_f9c86a0f255639795285_run, 0, true, "home_confirm_240" };
 /* 屏幕及控件交互入口：筛选事件类型，按工程配置顺序执行动作。
  * e 仅在同步回调期间有效；对象删除清空监听仍由屏幕创建模块管理。 */
 static void RingConfirm_event_handler(lv_event_t * e)
@@ -130,42 +86,6 @@ static void RingConfirm_event_handler(lv_event_t * e)
         default: break;
     }
 }
-
-static void BackAction_event_handler(lv_event_t * e)
-{
-    aidogui_ui_t * ui = lv_event_get_user_data(e);
-    lv_event_code_t code = lv_event_get_code(e);
-    switch (code) {
-        case LV_EVENT_CLICKED: {
-            {
-                ui_menu_screen_init();
-                _ui_screen_change(&ui->menu.root, LV_SCREEN_LOAD_ANIM_MOVE_RIGHT, 240, 0);
-                /* AIDOGUI_CUSTOM_CODE_ID 381023a2-a002-4b15-99e1-2e0934b48e46 */
-                /* AIDOGUI_EXIDE_CUSTOM_CODE_BEGIN implementation */
-                /* AIDOGUI_EXIDE_CUSTOM_CODE_END implementation */
-    
-            }
-            break;
-        }
-        default: break;
-    }
-}
-
-static void ConfirmAction_event_handler(lv_event_t * e)
-{
-    aidogui_ui_t * ui = lv_event_get_user_data(e);
-    lv_event_code_t code = lv_event_get_code(e);
-    switch (code) {
-        case LV_EVENT_CLICKED: {
-            {
-                aido_flow_trigger(&aido_flow_f9c86a0f255639795285, ui, lv_event_get_target(e), e);
-            }
-            break;
-        }
-        default: break;
-    }
-}
-
 
 /* 全部控件创建完成后统一注册；每次新建屏幕只调用一次。 */
 void aido_event_init_screen1(aidogui_ui_t * ui)
@@ -199,18 +119,10 @@ void aido_event_init_screen1(aidogui_ui_t * ui)
     aido_flow_observe(aidogui_ui.screen1.Spark8);
     aido_flow_observe(aidogui_ui.screen1.CtaLabel);
     aido_flow_observe(aidogui_ui.screen1.RingConfirm);
-    aido_flow_observe(aidogui_ui.screen1.BackAction);
-    aido_flow_observe(aidogui_ui.screen1.HomeBackGlyph);
     aido_flow_observe(aidogui_ui.screen1.MicGlyph);
-    aido_flow_observe(aidogui_ui.screen1.ConfirmAction);
-    aido_flow_observe(aidogui_ui.screen1.HomeConfirmGlyph);
     aido_flow_observe(aidogui_ui.screen1.HomeStage);
     lv_obj_remove_event_cb(ui->screen1.RingConfirm, RingConfirm_event_handler);
     lv_obj_add_event_cb(ui->screen1.RingConfirm, RingConfirm_event_handler, LV_EVENT_ALL, ui);
-    lv_obj_remove_event_cb(ui->screen1.BackAction, BackAction_event_handler);
-    lv_obj_add_event_cb(ui->screen1.BackAction, BackAction_event_handler, LV_EVENT_ALL, ui);
-    lv_obj_remove_event_cb(ui->screen1.ConfirmAction, ConfirmAction_event_handler);
-    lv_obj_add_event_cb(ui->screen1.ConfirmAction, ConfirmAction_event_handler, LV_EVENT_ALL, ui);
 }
 
 /* AIDOGUI_CUSTOM_CODE_ID 2484329c-399d-4919-8a8f-b256ccd0c363 */
