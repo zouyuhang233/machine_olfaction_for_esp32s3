@@ -314,8 +314,15 @@ static esp_err_t bme690_measure_locked(bool enable_heater,
     out->chip_id = s_chip_id;
     out->variant_id = s_variant_id;
     out->bosch_status = rslt;
+#ifdef BME69X_USE_FPU
+    /* 浮点 API：温度已是 °C，湿度已是 %RH；只有气压是 Pa。 */
+    out->temperature_c = data.temperature;
+    out->humidity_pct = data.humidity;
+#else
+    /* 定点 API：温度 x100，湿度 x1000。 */
     out->temperature_c = (float)data.temperature / 100.0f;
     out->humidity_pct = (float)data.humidity / 1000.0f;
+#endif
     out->pressure_hpa = (float)data.pressure / 100.0f;
     out->gas_valid = enable_heater && ((data.status & BME69X_GASM_VALID_MSK) != 0);
     out->heat_stable = enable_heater && ((data.status & BME69X_HEAT_STAB_MSK) != 0);

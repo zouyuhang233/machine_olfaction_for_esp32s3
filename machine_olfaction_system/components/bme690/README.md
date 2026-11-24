@@ -35,6 +35,7 @@ I (xxx) services: BME690 #1: ... Rs=... kΩ gas-valid/heat-stable
 ## 数据约定
 
 - BME690 不直接输出 TVOC/eCO2；服务层在没有 BSEC 时把这两项设为 `NAN`，UI 显示 `--`。
+- `bme690_sample_t.temperature_c` 单位是 °C，`humidity_pct` 单位是 %RH；启用 `BME69X_USE_FPU` 时 Bosch API 已直接输出这两个单位，禁止再次除以 100/1000。
 - `sensor_data_t.rs` 单位是 kΩ。
 - 原始 `bme690_sample_t.gas_resistance_ohm` 单位是 Ω。
 
