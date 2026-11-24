@@ -6,6 +6,7 @@
 
 #include "bsp.h"
 #include "buttons.h"
+#include "esp_app_desc.h"
 #include "esp_log.h"
 #include "esp_heap_caps.h"
 #include "esp_system.h"
@@ -922,13 +923,25 @@ static void refresh_network(ui_screen_id_t id)
     bool connected = net_wifi_connected();
     bool light = id == SCR_NETWORK_LIGHT;
     const char *status = !enabled ? "已关闭" : (connected ? "已连接" : "连接中");
+    char network_name[40];
+    if (connected) {
+        snprintf(network_name, sizeof(network_name), "%s %u%%", net_wifi_ssid(), (unsigned)net_wifi_signal());
+    } else if (enabled) {
+        snprintf(network_name, sizeof(network_name), "Wi-Fi 连接中");
+    } else {
+        snprintf(network_name, sizeof(network_name), "Wi-Fi 关闭");
+    }
     lv_color_t status_color = connected ? (light ? lv_color_hex(0x08745D) : lv_color_hex(0x8BEFD2))
                                         : (enabled ? (light ? lv_color_hex(0x8A5A00) : lv_color_hex(0xFBBF24))
                                                    : (light ? lv_color_hex(0x5A7276) : lv_color_hex(0x91AAB0)));
     if (id == SCR_NETWORK_DARK) {
         set_label_text(aidogui_ui.networkdark.Value52, status);
         set_label_text(aidogui_ui.networkdark.Value148, net_ip());
+        set_label_text(aidogui_ui.networkdark.WifiLabel, network_name);
         set_switch_checked(aidogui_ui.networkdark.WifiSwitch, enabled);
+        if (object_ok(aidogui_ui.networkdark.WifiLabel)) {
+            lv_obj_set_style_text_font(aidogui_ui.networkdark.WifiLabel, &ui_font_prompt_cn_14, 0);
+        }
         if (object_ok(aidogui_ui.networkdark.Value52)) {
             lv_obj_set_style_text_color(aidogui_ui.networkdark.Value52, status_color, 0);
             lv_obj_set_style_text_font(aidogui_ui.networkdark.Value52, &ui_font_prompt_cn_16, 0);
@@ -936,7 +949,11 @@ static void refresh_network(ui_screen_id_t id)
     } else if (id == SCR_NETWORK_LIGHT) {
         set_label_text(aidogui_ui.networklight.Value52, status);
         set_label_text(aidogui_ui.networklight.Value148, net_ip());
+        set_label_text(aidogui_ui.networklight.WifiLabel, network_name);
         set_switch_checked(aidogui_ui.networklight.WifiSwitch, enabled);
+        if (object_ok(aidogui_ui.networklight.WifiLabel)) {
+            lv_obj_set_style_text_font(aidogui_ui.networklight.WifiLabel, &ui_font_prompt_cn_14, 0);
+        }
         if (object_ok(aidogui_ui.networklight.Value52)) {
             lv_obj_set_style_text_color(aidogui_ui.networklight.Value52, status_color, 0);
             lv_obj_set_style_text_font(aidogui_ui.networklight.Value52, &ui_font_prompt_cn_16, 0);
@@ -1003,10 +1020,40 @@ static void refresh_display(ui_screen_id_t id)
 
 static void refresh_system(ui_screen_id_t id)
 {
-    char buf[16];
-    snprintf(buf, sizeof(buf), "%lu", (unsigned long)modbus_baud());
-    if (id == SCR_SYSTEM_DARK) set_label_text(aidogui_ui.systemdark.Value148, buf);
-    else if (id == SCR_SYSTEM_LIGHT) set_label_text(aidogui_ui.systemlight.Value148, buf);
+    char baud[16];
+    char mac[20];
+    char device_id[16] = "OLF------";
+    char firmware[16];
+    snprintf(baud, sizeof(baud), "%lu", (unsigned long)modbus_baud());
+    services_device_id(mac, sizeof(mac));
+    if (strlen(mac) >= 17) {
+        snprintf(device_id, sizeof(device_id), "OLF-%c%c%c%c%c%c",
+                 mac[9], mac[10], mac[12], mac[13], mac[15], mac[16]);
+    }
+    snprintf(firmware, sizeof(firmware), "%.11s", esp_app_get_description()->version);
+
+    if (id == SCR_SYSTEM_DARK) {
+        set_label_text(aidogui_ui.systemdark.Value52, device_id);
+        set_label_text(aidogui_ui.systemdark.Value100, firmware);
+        set_label_text(aidogui_ui.systemdark.Value148, baud);
+    } else if (id == SCR_SYSTEM_LIGHT) {
+        set_label_text(aidogui_ui.systemlight.Value52, device_id);
+        set_label_text(aidogui_ui.systemlight.Value100, firmware);
+        set_label_text(aidogui_ui.systemlight.Value148, baud);
+    }
+}
+
+static void refresh_result(void)
+{
+    set_label_text(aidogui_ui.result.Confidence, "--");
+    set_label_text(aidogui_ui.result.FoodValue, "待接入");
+    set_label_text(aidogui_ui.result.FreshnessValue, "待检测");
+    if (object_ok(aidogui_ui.result.FoodValue)) {
+        lv_obj_set_style_text_font(aidogui_ui.result.FoodValue, &ui_font_prompt_cn_16, 0);
+    }
+    if (object_ok(aidogui_ui.result.FreshnessValue)) {
+        lv_obj_set_style_text_font(aidogui_ui.result.FreshnessValue, &ui_font_prompt_cn_16, 0);
+    }
 }
 
 static void refresh_sensor(ui_screen_id_t id)
@@ -1101,6 +1148,7 @@ static void refresh_values_for(ui_screen_id_t id)
     refresh_top_status(id);
     switch (id) {
     case SCR_DETECTION: refresh_detection(); break;
+    case SCR_RESULT: refresh_result(); break;
     case SCR_SENSOR_DARK:
     case SCR_SENSOR_LIGHT: refresh_sensor(id); break;
     case SCR_NETWORK_DARK:

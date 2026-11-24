@@ -16,6 +16,7 @@ idf_component_register(
         bsp
         lcd
         esp_timer
+        esp_app_format
         esp_system
 )
 
