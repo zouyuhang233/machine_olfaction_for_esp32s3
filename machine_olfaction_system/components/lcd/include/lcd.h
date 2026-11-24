@@ -1,14 +1,14 @@
 /*
- * lcd.h -- ST7735S 显示驱动（128x160，可旋转为 160x128 横屏）
+ * lcd.h -- ST7789 1.54" 显示驱动（240x240，RGB565）
  *
  * 只管"屏幕怎么初始化、像素怎么写"，不认识页面/布局。
- * 上层用法：lcd_init() → lcd_set_rotation(1) → lcd_clear()/lcd_draw_text() … → lcd_flush()
+ * 上层用法：lcd_init() → lcd_set_rotation(0) → LVGL flush
  *
  * 重要实现细节（踩坑得来，别改）：
- *   1. 这块模组的窗口偏移是 (0,0)：CASET/RASET 直接写 0..127 / 0..159
- *   2. 面板实际按 18 位（RGB666，3 字节/像素）解释数据；写 16 位会出现
- *      "字被沿对角线拉弯、3 行一循环"的现象 → 所以 0x3A=0x06 + 发送端展开成 3 字节
- *   3. 初始化序列照厂商 CTC180 例程，全程不发反显命令
+ *   1. 240×240 有效区位于 240×320 控制器显存中：
+ *      0°/180° 偏移 (0,80)，90°/270° 偏移 (80,0)
+ *   2. 使用 RGB565，每像素 2 字节，COLMOD=0x55
+ *   3. BLK 高电平点亮、低电平关闭；背光 PWM 在 bsp 层按高有效处理
  */
 #pragma once
 
@@ -40,10 +40,10 @@ esp_err_t lcd_init(void);
 
 /**
  * 旋转：
- *   0 = 竖屏 128x160（(0,0) 左上）
- *   1 = 横屏 160x128（右转 90°）
- *   2 = 竖屏 128x160（倒置）
- *   3 = 横屏 160x128（左转 90°）
+ *   0 = 0°（240x240）
+ *   1 = 90°（240x240）
+ *   2 = 180°（240x240）
+ *   3 = 270°（240x240）
  */
 esp_err_t lcd_set_rotation(int rot);
 
@@ -65,8 +65,21 @@ int lcd_draw_text(const lcd_font_t *font, int x, int y, const char *s, uint16_t 
 /** 以 cx 为水平中心画一行字。 */
 void lcd_draw_text_center(const lcd_font_t *font, int cx, int y, const char *s, uint16_t fg, uint16_t bg);
 
-/** 把帧缓冲推到屏上（逐行 18 位发送）。 */
+/** 把帧缓冲推到屏上（逐行 RGB565 发送）。 */
 esp_err_t lcd_flush(void);
+
+/**
+ * 直接把一块 RGB565 像素区域刷到屏上。
+ * pixels 按行优先排列，大小为 (x2-x1+1) * (y2-y1+1)。
+ */
+esp_err_t lcd_flush_area(int x1, int y1, int x2, int y2, const uint16_t *pixels);
+
+/**
+ * 直接把一块 XRGB8888 像素区域刷到屏上（LVGL 32 位色用）。
+ * pixels 按行优先排列，每像素 4 字节，内存布局 B,G,R,X（小端）。
+ * 内部做 RGB565 抖动后发送。
+ */
+esp_err_t lcd_flush_area_rgb8888(int x1, int y1, int x2, int y2, const uint32_t *pixels);
 
 #ifdef __cplusplus
 }

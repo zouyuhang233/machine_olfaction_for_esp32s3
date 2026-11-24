@@ -5,4 +5,8 @@ idf_component_register(
         bsp
         bme690
         lcd
+        lvgl__lvgl
+        lvgl_port
+        ui
+        app_services
 )

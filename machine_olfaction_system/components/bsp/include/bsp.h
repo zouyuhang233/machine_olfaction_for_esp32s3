@@ -3,12 +3,13 @@
  *
  * 边界：
  *   bsp  知道引脚、SPI 总线、背光；不知道屏的寄存器，也不知道画什么
- *   lcd  知道 ST7735S 的命令、窗口、像素格式；不知道引脚号
+ *   lcd  知道 ST7789 的命令、窗口、像素格式；不知道引脚号
  *   main 只负责按顺序调用
  */
 #pragma once
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
@@ -30,8 +31,11 @@ void bsp_lcd_dc(bool data);
 /** 硬件复位：RST 低 100 ms，高 50 ms。 */
 void bsp_lcd_reset(void);
 
-/** 背光开关（模块 BLK 脚，高电平点亮）。 */
+/** 背光开关（模块 BLK 脚高电平点亮、低电平关闭）。 */
 void bsp_backlight(bool on);
+
+/** 背光亮度 0..100（LEDC PWM，100 = 最亮）。 */
+void bsp_backlight_set(uint8_t percent);
 
 #ifdef __cplusplus
 }

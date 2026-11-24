@@ -6,5 +6,7 @@ idf_component_register(
         "include"
         "bosch"
     REQUIRES
+        bsp
         driver
+        esp_timer
 )

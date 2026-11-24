@@ -1,0 +1,19 @@
+{
+  "Screen1": {},
+  "Detection": {},
+  "Result": {},
+  "Menu": {},
+  "MenuLight": {},
+  "SensorDark": {},
+  "NetworkDark": {},
+  "BleDark": {},
+  "AudioDark": {},
+  "DisplayDark": {},
+  "SystemDark": {},
+  "SensorLight": {},
+  "NetworkLight": {},
+  "BleLight": {},
+  "AudioLight": {},
+  "DisplayLight": {},
+  "SystemLight": {}
+}

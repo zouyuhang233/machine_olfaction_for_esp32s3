@@ -41,3 +41,6 @@ Ehthumbs.db
 #   硬件制作/    —— 自绘原理图/PCB 出图与评审结论
 #   选题/        —— 开题报告与 BOM
 #   MEMORY.md    —— 项目记忆总览
+
+# ===== AiDoGUI Designer 本机会话（含令牌，禁止提交）=====
+lvgl_ui/.ai-workspace/

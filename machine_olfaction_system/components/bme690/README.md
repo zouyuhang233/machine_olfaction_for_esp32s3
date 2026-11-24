@@ -1,58 +1,43 @@
-# components/bme690 —— BME690 驱动
+# BME690 采集组件
 
-## 组成
+## 接线
 
-| 文件 | 说明 |
-|---|---|
-| `include/bme690.h` | 本项目使用的 API |
-| `src/bme690.c` | ESP-IDF I²C 适配 + 强制模式单步测量 + 并行模式多步剖面 |
-| `bosch/bme69x.c/.h/bme69x_defs.h` | Bosch 官方 **BME69X SensorAPI v1.1.0**（BSD-3-Clause，未改动算法） |
-| `bosch/LICENSE` | 官方许可证原文 |
+| BME690 扩展板 | ESP32-S3 | 说明 |
+|---|---|---|
+| VDD / VDDIO | 3V3 | 3.3 V |
+| GND | GND | 共地 |
+| CSB | VDDIO | 必须直连；拉低一次会锁到 SPI，只能断电恢复 |
+| SDO | GND | I²C 7 位地址 0x76 |
+| SDI | GPIO8 | SDA，外部 4.7 kΩ 上拉到 VDDIO |
+| SCK | GPIO18 | SCL，外部 4.7 kΩ 上拉到 VDDIO |
 
-## 依赖
+## 启动自检日志
 
-- ESP-IDF v5.x（旧版 `driver/i2c.h` 主机 API，5.1.2 与 5.5.6 均可用）
-- 一个 I²C 主机端口（默认 `I2C_NUM_0`）
+正常时应看到：
 
-## 默认接线
-
-见 `../bsp/include/board_pins.h`：
-
-| BME690 | ESP32-S3 |
-|---|---|
-| SDI (SDA) | GPIO8 |
-| SCK (SCL) | GPIO18 |
-| CSB | VDDIO（直连，0Ω/跳线） |
-| SDO | GND（地址 0x76） |
-
-## 使用
-
-```c
-#include "bme690.h"
-
-ESP_ERROR_CHECK(bme690_init(I2C_NUM_0, GPIO_NUM_8, GPIO_NUM_18, 0x76));
-
-bme690_reading_t r;
-if (bme690_read(&r) == ESP_OK) {
-    printf("T=%.2f H=%.2f P=%.1f Rs=%.0f status=0x%02X\n",
-           r.temperature_c, r.humidity_pct, r.pressure_pa,
-           r.gas_resistance_ohm, r.status);
-}
+```text
+I (xxx) bme690: I2C 就绪: SDA=GPIO8 SCL=GPIO18 100000 Hz addr=0x76
+I (xxx) bme690: 身份: Chip_Id=0x61 Variant_Id=0x02 (BME690)
+I (xxx) bme690: 初始化完成: 16x T/P/H，forced 模式，校准参数已加载
+I (xxx) services: BME690 环境自检: 25.xx°C, 5x.xx%RH, 101x.xx hPa
+I (xxx) services: BME690 #1: ... Rs=... kΩ gas-valid/heat-stable
 ```
 
-多步加热剖面：
+初始环境自检不加热；之后每 1 s 做一次 300 °C / 100 ms 的 forced 测量。
 
-```c
-uint16_t temps[10] = {320, 100, 100, 100, 200, 200, 200, 320, 320, 320};
-uint16_t durs[10]  = { 50,  50,  50,  50,  50,  50,  50,  50,  50,  50};
-bme690_set_profile(temps, durs, 10, 0);
-bme690_reading_t out[10];
-uint8_t n;
-bme690_read_profile(out, 10, &n);
-```
+## 失败提示
 
-## 注意
+- `0x76 无应答`：先查 VDD/VDDIO/GND、GPIO8/18 是否接反、SCK/SDI 是否有 4.7 kΩ 上拉。
+- `Chip_Id=0x61` 但 `Variant_Id` 不是 `0x02`：不是 BME690。
+- 之前能读、现在扫不到：CSB 可能被瞬间拉低，断电重新上电并确认 CSB 直连 VDDIO。
+- `Rs=--`：温湿度正常但气体测量无效，检查加热配置、供电和传感器是否刚上电未稳定。
 
-- 外部 **4.7k 上拉**（SDA/SCL 到 VDDIO）必须有；芯片内部无上拉。
-- **CSB 直连 VDDIO**，不能串电阻；被拉低一次后 I²C 锁死到下次重新上电。
-- 完整调试步骤见 `器件文档/BME690/BME690_使用与调试指南.md`。
+## 数据约定
+
+- BME690 不直接输出 TVOC/eCO2；服务层在没有 BSEC 时把这两项设为 `NAN`，UI 显示 `--`。
+- `sensor_data_t.rs` 单位是 kΩ。
+- 原始 `bme690_sample_t.gas_resistance_ohm` 单位是 Ω。
+
+## 第三方代码
+
+`bosch/` 是从 Bosch Sensortec `BME690_SensorAPI` 引入的 v1.1.0（commit `8a4d9229aaa26c960ca8f7717cb93087f067ecbe`），BSD-3-Clause，许可证见同目录 `LICENSE`。

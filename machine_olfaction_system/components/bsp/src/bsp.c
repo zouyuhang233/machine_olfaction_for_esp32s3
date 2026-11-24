@@ -4,17 +4,40 @@
 #include "bsp.h"
 
 #include "board_pins.h"
+#include "driver/ledc.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
 static const char *TAG = "bsp";
 
+static void backlight_pwm_init(void)
+{
+    ledc_timer_config_t timer = {
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .duty_resolution = LEDC_TIMER_10_BIT,
+        .timer_num = LEDC_TIMER_0,
+        .freq_hz = 5000,
+        .clk_cfg = LEDC_AUTO_CLK,
+    };
+    ESP_ERROR_CHECK(ledc_timer_config(&timer));
+
+    ledc_channel_config_t ch = {
+        .gpio_num = BOARD_LCD_BL,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .channel = LEDC_CHANNEL_0,
+        .timer_sel = LEDC_TIMER_0,
+        .duty = 0, /* BLK active-high: 0% duty = backlight off */
+        .hpoint = 0,
+    };
+    ESP_ERROR_CHECK(ledc_channel_config(&ch));
+}
+
 esp_err_t bsp_init(void)
 {
-    /* DC / RST / BL 三个普通输出脚 */
+    /* DC / RST 两个普通输出脚；BL 高电平点亮，走 LEDC PWM */
     gpio_config_t out = {
-        .pin_bit_mask = (1ULL << BOARD_LCD_DC) | (1ULL << BOARD_LCD_RST) | (1ULL << BOARD_LCD_BL),
+        .pin_bit_mask = (1ULL << BOARD_LCD_DC) | (1ULL << BOARD_LCD_RST),
         .mode = GPIO_MODE_OUTPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
@@ -25,21 +48,20 @@ esp_err_t bsp_init(void)
         ESP_LOGE(TAG, "GPIO 配置失败: %s", esp_err_to_name(err));
         return err;
     }
-    gpio_set_level(BOARD_LCD_BL, 0);   /* 先关背光，等第一帧画完再开 */
+    backlight_pwm_init();
+    bsp_backlight_set(0);
     gpio_set_level(BOARD_LCD_RST, 1);
     gpio_set_level(BOARD_LCD_DC, 1);
 
     /* SPI2 总线：只写，无 MISO。
-     * 必须开 DMA：ESP-IDF 在 CPU 模式下单次传输上限只有 64 字节，
-     * 而横屏一行要发 160*3 = 480 字节，否则传输会被驱动拒绝、屏幕花屏。
-     * max_transfer_sz 按较长边（160）计算。 */
+     * 必须开 DMA：RGB565 一行 240*2 = 480 字节。 */
     spi_bus_config_t bus = {
         .mosi_io_num = BOARD_LCD_MOSI,
         .miso_io_num = -1,
         .sclk_io_num = BOARD_LCD_SCLK,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-        .max_transfer_sz = BOARD_LCD_HEIGHT * 3,   /* 横屏一行 160*3 = 480 字节 */
+        .max_transfer_sz = BOARD_LCD_WIDTH * 2,    /* RGB565 一行 240*2 = 480 字节 */
     };
     err = spi_bus_initialize(BOARD_LCD_SPI_HOST, &bus, SPI_DMA_CH_AUTO);
     if (err != ESP_OK) {
@@ -82,5 +104,16 @@ void bsp_lcd_reset(void)
 
 void bsp_backlight(bool on)
 {
-    gpio_set_level(BOARD_LCD_BL, on ? 1 : 0);
+    bsp_backlight_set(on ? 100 : 0);
+}
+
+void bsp_backlight_set(uint8_t percent)
+{
+    if (percent > 100) {
+        percent = 100;
+    }
+    /* 模块 BLK 低电平关闭、高电平点亮。 */
+    const uint32_t duty = (uint32_t)percent * 1023U / 100U;
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
 }

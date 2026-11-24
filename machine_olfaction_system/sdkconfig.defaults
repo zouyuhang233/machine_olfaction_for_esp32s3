@@ -55,3 +55,20 @@ CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH=y
 
 # ---------- Heap tracing (debug aid, negligible cost) ----------
 CONFIG_HEAP_TRACING_STANDALONE=y
+
+# ---------- LVGL 9.4: 32-bit color + system heap ----------
+CONFIG_LV_COLOR_DEPTH_32=y
+CONFIG_LV_USE_CLIB_MALLOC=y
+CONFIG_LV_USE_LOG=y
+CONFIG_LV_USE_ASSERT_OBJ=y
+
+# ---------- LVGL fonts: numbers + icons ----------
+CONFIG_LV_FONT_MONTSERRAT_10=y
+CONFIG_LV_FONT_MONTSERRAT_12=y
+CONFIG_LV_FONT_MONTSERRAT_14=y
+CONFIG_LV_FONT_MONTSERRAT_16=y
+CONFIG_LV_FONT_MONTSERRAT_20=y
+CONFIG_LV_USE_FLEX=y
+CONFIG_LV_USE_SCALE=y
+# Custom CJK fonts are generated with compressed bitmaps
+CONFIG_LV_USE_FONT_COMPRESSED=y
