@@ -16,9 +16,9 @@ static const char *TAG = "lcd";
 
 /* ST7789 MADCTL: 0, 90, 180, 270 degrees. The panel is square. */
 static const uint8_t s_madctl[4] = {0x00, 0x60, 0xC0, 0xA0};
-/* 1.54-inch 240x240 panel occupies 240x320 controller RAM. */
-static const int16_t s_xoff_table[4] = {0, 80, 0, 80};
-static const int16_t s_yoff_table[4] = {80, 0, 80, 0};
+/* This YW-T114 panel exposes a native 240x240 window; do not shift it. */
+static const int16_t s_xoff_table[4] = {0, 0, 0, 0};
+static const int16_t s_yoff_table[4] = {0, 0, 0, 0};
 
 #define FB_MAX_W 240
 #define FB_MAX_H 240
