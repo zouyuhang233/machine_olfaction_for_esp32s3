@@ -14,6 +14,7 @@
 #include "services.h"
 #include "settings_store.h"
 #include "ui.h"
+#include "galaxy_effect.h"
 
 static const char *TAG = "app_ui";
 
@@ -942,6 +943,22 @@ static void sync_screen(void)
     }
     s_screen_id = next;
     prepare_screen_for_display(next);
+
+    switch (next) {
+    case SCR_HOME:
+        galaxy_effect_attach(aidogui_ui.screen1.HomeStage, GALAXY_MODE_HOME, 120, 104);
+        break;
+    case SCR_DETECTION:
+        galaxy_effect_attach(aidogui_ui.detection.DetectionStage, GALAXY_MODE_DETECTION, 120, 116);
+        break;
+    case SCR_RESULT:
+        galaxy_effect_attach(aidogui_ui.result.ResultStage, GALAXY_MODE_RESULT, 120, 108);
+        break;
+    default:
+        galaxy_effect_attach(NULL, GALAXY_MODE_OFF, 120, 120);
+        break;
+    }
+
     if (screen_uses_light(next)) s_light_theme = true;
     else if (screen_sets_dark_theme(next)) s_light_theme = false;
 
@@ -1397,6 +1414,7 @@ esp_err_t app_ui_init(void)
         return ESP_FAIL;
     }
 
+    galaxy_effect_init();
     create_focus_ring();
     sync_screen();
     show_toast("ARROWS SELECT  OK  BACK");

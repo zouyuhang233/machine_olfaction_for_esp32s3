@@ -8,7 +8,7 @@
 
 ## 0. 一句话现状
 
-ESP32-S3 电子鼻项目，**上位机已交付；固件已迁移到 1.54 寸 ST7789 240×240 + LVGL 9.4 原生 240×240 新 UI，完成 6 键交互、17 页自动巡页稳定性测试和 BME690 实机采集；推理/Modbus/真实 Wi‑Fi/BLE/音频仍待接入；硬件处于「模块调试」阶段（不打板）**；
+ESP32-S3 电子鼻项目，**上位机已交付；固件已迁移到 1.54 寸 ST7789 240×240 + LVGL 9.4 原生 240×240 新 UI，完成 6 键交互、17 页自动巡页稳定性测试、中心星系吸收动效和 BME690 实机采集；推理/Modbus/真实 Wi‑Fi/BLE/音频仍待接入；硬件处于「模块调试」阶段（不打板）**；
 气体传感器 **BME690**（实装 41.58 元）、屏 **1.54 寸 ST7789 240×240 8 脚模块**（已点亮并完成 0°/无偏移修正）、语音 **SU-03T/LU-03T**；
 BME690 裸片自制了 **扩展板 v1.0**（2026-11-24 已按评审更新出图：C1/C2 100nF、R1/R2 4.7k、H3 接口选择、H4 地址选择）。
 
@@ -177,8 +177,8 @@ BME690 寄存器只给 **gas resistance Rs、温度、湿度、气压**。
 - 分区：nvs 24K / phy_init 4K / factory(app) 4M / storage(fat) ~11.7M / coredump 512K。
 - **`CONFIG_ESPTOOLPY_FLASHMODE_QIO=y` 但 `ESPTOOLPY_FLASHMODE="dio"` 不是 bug**（烧写用 dio，启动自升 QIO）。
 - **`FREERTOS_HZ=1000` 是硬需求**：Modbus RTU 帧间静默 ≥3.5 字符 = 4ms@115200；100Hz tick 下 `pdMS_TO_TICKS(4)` 会退化成 10ms。
-- **2026-11-24 构建/烧录通过**：`machine_olfaction_system.bin` **826,976 B**（app 分区剩余 80%，含 BME690 驱动与新 240×240 UI）。
-- **代码结构**（2026-11-24）：`main/app_main.c`（组装）+ `components/bsp|lcd|font`（底层显示）+ `components/bme690`（I²C + Bosch API）+ `components/buttons`（6 键）+ `components/lvgl_port`（LVGL 9.4 XRGB8888 移植）+ `components/app_services`（BME690 采集任务 / 其余服务模拟 / NVS）+ `components/ui`（`lvgl_ui` 导出页面 + 6 键适配）。
+- **2026-11-24 构建/烧录通过**：`machine_olfaction_system.bin` **835,056 B**（app 分区剩余 80%，含 BME690、240×240 UI 与星系吸收动效）。
+- **代码结构**（2026-11-24）：`main/app_main.c`（组装）+ `components/bsp|lcd|font`（底层显示）+ `components/bme690`（I²C + Bosch API）+ `components/buttons`（6 键）+ `components/lvgl_port`（LVGL 9.4 XRGB8888 移植）+ `components/app_services`（BME690 采集任务 / 其余服务模拟 / NVS）+ `components/ui`（`lvgl_ui` 导出页面 + 6 键适配 + `galaxy_effect.c` 星系粒子）。
 - **SPI 必须开 DMA**：CPU 模式单次上限 64 字节，而 240 像素 RGB565 一行 480 字节；见 4.3。
 - 业务代码进度：显示子系统 ✅；LVGL 原生 240×240 UI ✅；6 键 ✅；BME690 实机采集 ✅；推理、Modbus、真实 Wi‑Fi/BLE/音频 ❌ 未开始。
 
@@ -265,6 +265,7 @@ BME690 寄存器只给 **gas resistance Rs、温度、湿度、气压**。
 | **2026-11-24** | **新屏 + 新 UI + 六键迁移**：1.54 寸 ST7789 240×240；AiDoGUI 原生 240×240 新 UI 导出；6 键完整逻辑；LVGL 栈 24 KB；修复启动全建 17 屏造成的看门狗；修复 ST7789 无偏移映射与旧 NVS 旋转；17 页自动巡页无崩溃，编译/烧录通过 |
 | **2026-11-24** | **BME690 实机验证**：Bosch SensorAPI v1.1.0；I²C 0x76 识别 `Chip_Id=0x61 / Variant_Id=0x02`；温湿度、气压、300℃/100ms forced Rs 周期采集正常 |
 | **2026-11-24** | **BME690 扩展板更新 + 使用指南**：新版已加 C1/C2 100nF、R1/R2 4.7k、H3 接口选择、H4 地址选择，丝印顶层可读；旧图/旧改版指引删除；新增 `BME690_使用与调试指南.md` 与 `硬件制作\ESP32-S3扩展底板\` |
+| **2026-11-24** | **中心星系吸收动效**：`galaxy_effect.c` 46 粒子、椭圆吸积盘、三层景深、螺旋内落；首页慢速、检测页快速、结果页缓落，菜单/设置页关闭；17 页巡页无崩溃、无看门狗 |
 
 ## 13. 待确认 / 待办
 
@@ -278,7 +279,8 @@ BME690 寄存器只给 **gas resistance Rs、温度、湿度、气压**。
 - [x] **6 键新 UI（2026-11-24 完成）**：UP/DOWN/LEFT/RIGHT/OK/BACK；240×240 原生 UI；焦点保持、方向键连发、检测流程、确认弹窗、昼夜主题、设置编辑与音量/亮度连调。
 - [x] **BME690 I²C 驱动/采集任务（2026-11-24 代码完成）**：Bosch API v1.1.0、Variant_Id 检查、环境自检、300℃/100ms forced Rs、服务层缓存、UI 无效值显示 `--`。
 - [x] **ST7789 方向/偏移（2026-11-24）**：默认 0°、`MADCTL=0x00`，本批 YW-T114 原生 240×240 窗口为 `(0,0)`。
-- [x] **17 页自动巡页（2026-11-24）**：启动约 1.5 s，无看门狗、无崩溃，堆内存稳定约 209 KB。
+- [x] **17 页自动巡页（2026-11-24）**：启动约 1.5 s，无看门狗、无崩溃；星系模式下堆内存约 185–200 KB，切页后正常回收。
+- [x] **中心星系吸收动效（2026-11-24）**：46 粒子 / 椭圆吸积盘 / 三层景深；首页慢速、检测页快速、结果页缓落。
 - [x] 本次代码、UI、BOM、器件文档已提交并推送 GitHub。
 - [x] git init（**2026-11-20 完成**，已推送到 GitHub `zouyuhang233/machine_olfaction_for_esp32s3`，分支 main）
 - [ ] 需要时把 BME690 官方手册下载到 `器件文档\`。→ ✅ 已完成（2026-11-20）
@@ -340,7 +342,7 @@ BME690 寄存器只给 **gas resistance Rs、温度、湿度、气压**。
 | BME690 实机 | `components/bme690` 使用 ESP-IDF I²C（GPIO8/18，100 kHz，0x76）+ Bosch BME690 SensorAPI v1.1.0；读得 `Chip_Id=0x61 / Variant_Id=0x02`，温湿度、气压、300℃/100ms forced Rs 周期采集正常。 |
 | 服务层 | `services` 独立任务每秒测量一次；UI 只读缓存；无 BSEC 时 TVOC/eCO2 为 `NAN` 并显示 `--`，`rs` 单位 kΩ。 |
 | 文档/BOM | 新建 `器件文档/1.54寸TFT彩屏_ST7789_240x240/`；旧 1.8 寸目录移出工作区；BOM V1.1 更新为 782.19 元。 |
-| 构建验证 | 正式固件 826,976 B，已烧录 COM7；最终启动无 WDT、无栈溢出。 |
+| 构建验证 | 正式固件 835,056 B，已烧录 COM7；最终启动无 WDT、无栈溢出。 |
 
 ### 2026-11-24 BME690 驱动 + 使用调试指南
 
@@ -361,3 +363,14 @@ BME690 寄存器只给 **gas resistance Rs、温度、湿度、气压**。
 | 文档重写 | `README.md`、`BME690扩展板_评审与上电检查.md` 按新版重写；旧 `改版指引.md` 改为 `BME690扩展板_改版记录.md`；新增 `硬件制作\README.md` 与 `硬件制作\ESP32-S3扩展底板\`。 |
 | 默认配置 | H3 短接 1-2（I²C，CSB→VDDIO），H4 短接 1-2（0x76）；H1 `GND/CSB_H/SDI/SCK`，H2 `VDD/GND/VDDIO/SDO`。 |
 | 仍待确认 | 热隔离（U1 下方禁铺铜、Φ1.0–1.5mm 非金属化孔）在 2D 图中无法核验，打样前在 EDA 3D/Gerber 确认。 |
+
+### 2026-11-24 中心星系吸收动效
+
+| 动作 | 说明 |
+|---|---|
+| 新增组件 | `machine_olfaction_system/components/ui/galaxy_effect.c/.h`，固定 46 粒子对象池 + 33 ms LVGL 定时器，不分配整屏 Canvas。 |
+| 3D 表现 | 椭圆吸积盘两条旋转弧；粒子按远/中/近三层做景深缩放、亮度、闪烁和切向拉伸；半径随角度持续收缩，到核心后回收重生。 |
+| 页面节奏 | 首页约 0.62 倍慢速吸收；检测页约 2.85 倍快速吸收并提升亮度；结果页约 0.38 倍缓落；菜单/设置页关闭以免干扰文字和焦点。 |
+| 层级 | 动效挂到对应 Stage 最底层，现有圆环、文字、焦点环、按钮始终在其上方。 |
+| 稳定性 | 自检巡完 17 页无 panic/WDT；切页后粒子层被安全销毁并按需重建，内存无持续增长。 |
+| 构建 | 2026-11-24 正式构建 **835,056 B（0xcbdf0）**，已烧录 COM7。 |

@@ -8,9 +8,9 @@
 
 | 项 | 状态 |
 |---|---|
-| 编译 / 烧录 | ✅ 通过（2026-11-24，`machine_olfaction_system.bin` 826,976 B，APP 分区剩余约 80%） |
+| 编译 / 烧录 | ✅ 通过（2026-11-24，`machine_olfaction_system.bin` 835,056 B，APP 分区剩余约 80%） |
 | 显示屏 | ✅ **1.54 寸 ST7789，240×240，RGB565，SPI 40 MHz，默认 0°** |
-| UI | ✅ `lvgl_ui` 新导出的 **原生 240×240** 界面：首页 / 检测 / 结果 / 菜单 / 传感器 / 网络 / 蓝牙 / 声音 / 显示 / 系统（昼夜主题） |
+| UI | ✅ `lvgl_ui` 新导出的 **原生 240×240** 界面：首页 / 检测 / 结果 / 菜单 / 传感器 / 网络 / 蓝牙 / 声音 / 显示 / 系统（昼夜主题）；首页、检测、结果带星系吸收动效 |
 | 按键 | ✅ **6 键**：UP / DOWN / LEFT / RIGHT / OK / BACK，消抖 + 方向键连发 |
 | 稳定性 | ✅ 启动约 1.5 s；17 页自动巡页无崩溃、无看门狗复位；LVGL 栈 24 KB，页面按需创建 |
 | BME690 | ✅ I²C 实机识别（Chip_Id=0x61 / Variant_Id=0x02）并周期采样温湿度、气压、Rs |
@@ -26,7 +26,7 @@ components/buttons/      6 键轮询、20 ms 消抖、按住连发
 components/lvgl_port/    LVGL 9.4 移植、1 ms tick、40 行绘制缓冲、24 KB 任务栈
 components/app_services/ NVS 设置、BME690 服务、模拟网络/音频/Modbus
 components/bme690/       BME690 I²C 驱动
-components/ui/           AiDoGUI 240×240 导出代码 + app_ui.c 六键交互适配
+components/ui/           AiDoGUI 240×240 导出代码 + app_ui.c 六键交互 + galaxy_effect.c
 partitions.csv           NVS 24K / phy_init 4K / factory 4M / storage ~11.7M / coredump 512K
 sdkconfig.defaults       配置权威；sdkconfig 是生成物
 build/                   构建产物（gitignore）
@@ -69,6 +69,17 @@ build/                   构建产物（gitignore）
 7. **LVGL 栈**：24 KB；绘制缓冲 240×40×4 B；UI 任务优先级 5。
 8. **字体/对比度**：文本标签按字体高度自适应；浅色主题正文、弱文本、强调色均已加深。
 
+## 星系吸收动效
+
+- **实现**：`components/ui/galaxy_effect.c`，46 个真实 LVGL 粒子，不用 240×240 的大 Canvas。
+- **3D 视觉**：椭圆吸积盘、两层旋转轨道弧、粒子径向缩放/亮度衰减、近层切向拉伸和闪烁。
+- **页面节奏**：
+  - 首页：慢速吸收，适合待机；
+  - 检测页：明显加速、提高亮度、吸积盘转快；
+  - 结果页：降速缓落，形成“分析完成”的稳定感；
+  - 菜单和设置页：关闭粒子层，避免干扰文字与焦点。
+- **优化**：33 ms 定时器、固定对象池、粒子到核心后回收复用；任务栈和 LVGL 内存不随页面切换持续增长。
+- **同步**：进入页面时自动挂到对应 Stage 的最底层，现有圆环、文字、焦点环和按钮保持在粒子之上。
 ## 构建 / 烧录（Windows）
 
 ```bat
