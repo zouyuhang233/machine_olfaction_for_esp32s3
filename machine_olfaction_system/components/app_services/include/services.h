@@ -47,6 +47,7 @@ uint8_t net_wifi_signal(void);
 
 bool net_ble_enabled(void);
 void net_ble_set_enabled(bool en);
+bool net_ble_connected(void);
 const char *net_ble_status_text(void);
 const char *net_ble_name(void);
 

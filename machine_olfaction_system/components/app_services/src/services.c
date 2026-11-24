@@ -17,6 +17,7 @@
 static const char *TAG = "services";
 
 #define WIFI_CONNECT_MS      1500
+#define BLE_CONNECT_MS       1200
 #define SENSOR_RETRY_MS      10000
 #define SENSOR_TASK_STACK    6144
 #define SENSOR_TASK_PRIO     5
@@ -27,6 +28,7 @@ typedef struct {
 } sensor_cache_t;
 
 static int64_t s_wifi_on_us;
+static int64_t s_ble_on_us;
 static sensor_cache_t s_sensor_cache;
 static SemaphoreHandle_t s_sensor_lock;
 
@@ -166,7 +168,9 @@ static void sensor_task(void *arg)
 
 void services_init(void)
 {
-    s_wifi_on_us = esp_timer_get_time();
+    int64_t now_us = esp_timer_get_time();
+    s_wifi_on_us = now_us;
+    s_ble_on_us = now_us;
     sensor_cache_reset();
     s_sensor_lock = xSemaphoreCreateMutex();
 
@@ -294,12 +298,26 @@ void net_ble_set_enabled(bool en)
         return;
     }
     s->ble_enabled = en;
+    s_ble_on_us = esp_timer_get_time();
     settings_save();
+}
+
+bool net_ble_connected(void)
+{
+    const app_settings_t *s = settings_get();
+    if (!s->ble_enabled) {
+        return false;
+    }
+    return (esp_timer_get_time() - s_ble_on_us) >= (BLE_CONNECT_MS * 1000);
 }
 
 const char *net_ble_status_text(void)
 {
-    return settings_get()->ble_enabled ? "已开启" : "已关闭";
+    const app_settings_t *s = settings_get();
+    if (!s->ble_enabled) {
+        return "已关闭";
+    }
+    return net_ble_connected() ? "已连接" : "广播中";
 }
 
 const char *net_ble_name(void)

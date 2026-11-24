@@ -58,6 +58,12 @@ typedef enum {
     CONFIRM_RESET,
 } confirm_mode_t;
 
+typedef enum {
+    RADIO_OFF = 0,
+    RADIO_CONNECTING,
+    RADIO_CONNECTED,
+} radio_state_t;
+
 static ui_screen_id_t s_screen_id;
 static int s_focus_index;
 static int s_focus_memory[SCR_COUNT];
@@ -461,6 +467,161 @@ static void focus_move(int delta)
 }
 
 static void refresh_values_for(ui_screen_id_t id);
+
+static void status_icons_for(ui_screen_id_t id, lv_obj_t **wifi, lv_obj_t **ble)
+{
+    *wifi = NULL;
+    *ble = NULL;
+    switch (id) {
+    case SCR_HOME:
+        *wifi = aidogui_ui.screen1.StatusWifi;
+        *ble = aidogui_ui.screen1.StatusBluetooth;
+        break;
+    case SCR_DETECTION:
+        *wifi = aidogui_ui.detection.StatusWifi;
+        *ble = aidogui_ui.detection.StatusBluetooth;
+        break;
+    case SCR_RESULT:
+        *wifi = aidogui_ui.result.StatusWifi;
+        *ble = aidogui_ui.result.StatusBluetooth;
+        break;
+    case SCR_MENU_DARK:
+        *wifi = aidogui_ui.menu.StatusWifi;
+        *ble = aidogui_ui.menu.StatusBluetooth;
+        break;
+    case SCR_MENU_LIGHT:
+        *wifi = aidogui_ui.menulight.StatusWifi;
+        *ble = aidogui_ui.menulight.StatusBluetooth;
+        break;
+    case SCR_SENSOR_DARK:
+        *wifi = aidogui_ui.sensordark.StatusWifi;
+        *ble = aidogui_ui.sensordark.StatusBluetooth;
+        break;
+    case SCR_SENSOR_LIGHT:
+        *wifi = aidogui_ui.sensorlight.StatusWifi;
+        *ble = aidogui_ui.sensorlight.StatusBluetooth;
+        break;
+    case SCR_NETWORK_DARK:
+        *wifi = aidogui_ui.networkdark.StatusWifi;
+        *ble = aidogui_ui.networkdark.StatusBluetooth;
+        break;
+    case SCR_NETWORK_LIGHT:
+        *wifi = aidogui_ui.networklight.StatusWifi;
+        *ble = aidogui_ui.networklight.StatusBluetooth;
+        break;
+    case SCR_BLE_DARK:
+        *wifi = aidogui_ui.bledark.StatusWifi;
+        *ble = aidogui_ui.bledark.StatusBluetooth;
+        break;
+    case SCR_BLE_LIGHT:
+        *wifi = aidogui_ui.blelight.StatusWifi;
+        *ble = aidogui_ui.blelight.StatusBluetooth;
+        break;
+    case SCR_AUDIO_DARK:
+        *wifi = aidogui_ui.audiodark.StatusWifi;
+        *ble = aidogui_ui.audiodark.StatusBluetooth;
+        break;
+    case SCR_AUDIO_LIGHT:
+        *wifi = aidogui_ui.audiolight.StatusWifi;
+        *ble = aidogui_ui.audiolight.StatusBluetooth;
+        break;
+    case SCR_DISPLAY_DARK:
+        *wifi = aidogui_ui.displaydark.StatusWifi;
+        *ble = aidogui_ui.displaydark.StatusBluetooth;
+        break;
+    case SCR_DISPLAY_LIGHT:
+        *wifi = aidogui_ui.displaylight.StatusWifi;
+        *ble = aidogui_ui.displaylight.StatusBluetooth;
+        break;
+    case SCR_SYSTEM_DARK:
+        *wifi = aidogui_ui.systemdark.StatusWifi;
+        *ble = aidogui_ui.systemdark.StatusBluetooth;
+        break;
+    case SCR_SYSTEM_LIGHT:
+        *wifi = aidogui_ui.systemlight.StatusWifi;
+        *ble = aidogui_ui.systemlight.StatusBluetooth;
+        break;
+    default:
+        break;
+    }
+}
+
+static lv_obj_t *status_badge_ensure(lv_obj_t *icon)
+{
+    if (!object_ok(icon)) return NULL;
+
+    lv_obj_t *dot = lv_obj_get_child(icon, 0);
+    if (object_ok(dot)) return dot;
+
+    dot = lv_obj_create(icon);
+    lv_obj_remove_style_all(dot);
+    lv_obj_set_size(dot, 9, 9);
+    lv_obj_align(dot, LV_ALIGN_BOTTOM_RIGHT, 1, 1);
+    lv_obj_remove_flag(dot, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_radius(dot, LV_RADIUS_CIRCLE, 0);
+    lv_obj_set_style_bg_opa(dot, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(dot, 1, 0);
+
+    lv_obj_t *check = lv_label_create(dot);
+    lv_label_set_text(check, "\xEE\x9C\xBE");
+    lv_obj_set_style_text_font(check, &ui_font_status_badge_9, 0);
+    lv_obj_set_style_text_color(check, lv_color_white(), 0);
+    lv_obj_center(check);
+    return dot;
+}
+
+static void apply_status_icon(lv_obj_t *icon, bool enabled, bool connected,
+                              bool light, const char *name)
+{
+    if (!object_ok(icon)) return;
+
+    if (!enabled) {
+        lv_obj_add_flag(icon, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_user_data(icon, (void *)(uintptr_t)RADIO_OFF);
+        return;
+    }
+
+    lv_obj_remove_flag(icon, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(icon, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
+
+    radio_state_t state = connected ? RADIO_CONNECTED : RADIO_CONNECTING;
+    lv_color_t color = connected
+        ? (light ? lv_color_hex(0x007A5A) : lv_color_hex(0x55F2B6))
+        : (light ? lv_color_hex(0xB86B00) : lv_color_hex(0xFFB74D));
+
+    lv_obj_set_style_text_color(icon, color, 0);
+    lv_obj_set_style_text_opa(icon, LV_OPA_COVER, 0);
+
+    lv_obj_t *dot = status_badge_ensure(icon);
+    if (!object_ok(dot)) return;
+    lv_obj_t *check = lv_obj_get_child(dot, 0);
+    lv_obj_set_style_bg_color(dot, color, 0);
+    lv_obj_set_style_border_color(dot, light ? lv_color_white() : lv_color_hex(0x081217), 0);
+
+    if (object_ok(check)) {
+        if (connected) lv_obj_remove_flag(check, LV_OBJ_FLAG_HIDDEN);
+        else lv_obj_add_flag(check, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    radio_state_t previous = (radio_state_t)(uintptr_t)lv_obj_get_user_data(icon);
+    if (previous != state) {
+        lv_anim_delete(dot, NULL);
+        lv_obj_set_style_opa(dot, LV_OPA_TRANSP, 0);
+        lv_obj_fade_in(dot, 220, 0);
+        lv_obj_set_user_data(icon, (void *)(uintptr_t)state);
+        ESP_LOGI(TAG, "%s 状态图标: %s", name, connected ? "已连接" : "连接中");
+    }
+}
+
+static void refresh_top_status(ui_screen_id_t id)
+{
+    lv_obj_t *wifi = NULL;
+    lv_obj_t *ble = NULL;
+    status_icons_for(id, &wifi, &ble);
+    bool light = screen_uses_light(id);
+    apply_status_icon(wifi, net_wifi_enabled(), net_wifi_connected(), light, "WiFi");
+    apply_status_icon(ble, net_ble_enabled(), net_ble_connected(), light, "蓝牙");
+}
 
 static void toast_delete(void)
 {
@@ -937,6 +1098,7 @@ static void refresh_detection(void)
 
 static void refresh_values_for(ui_screen_id_t id)
 {
+    refresh_top_status(id);
     switch (id) {
     case SCR_DETECTION: refresh_detection(); break;
     case SCR_SENSOR_DARK:
@@ -1006,6 +1168,7 @@ static void toggle_wifi(void)
 {
     net_wifi_set_enabled(!net_wifi_enabled());
     refresh_network(s_screen_id);
+    refresh_top_status(s_screen_id);
     show_toast(net_wifi_enabled() ? "无线网络已开启" : "无线网络已关闭");
 }
 
@@ -1013,6 +1176,7 @@ static void toggle_ble(void)
 {
     net_ble_set_enabled(!net_ble_enabled());
     refresh_ble(s_screen_id);
+    refresh_top_status(s_screen_id);
     show_toast(net_ble_enabled() ? "蓝牙已开启" : "蓝牙已关闭");
 }
 
