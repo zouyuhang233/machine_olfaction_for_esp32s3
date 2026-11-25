@@ -101,6 +101,8 @@ static lv_chart_series_t *s_monitor_rs_series;
 static lv_obj_t *s_monitor_values1;
 static lv_obj_t *s_monitor_values2;
 static lv_obj_t *s_monitor_values3;
+static uint32_t s_monitor_last_sample_count;
+static bool s_monitor_has_sample;
 static lv_obj_t *s_monitor_status_wifi;
 static lv_obj_t *s_monitor_status_bt;
 
@@ -533,7 +535,7 @@ static void monitor_screen_init(void)
     lv_obj_t *legend = lv_label_create(panel);
     lv_obj_set_size(legend, 150, 16);
     lv_obj_set_pos(legend, 8, 3);
-    lv_label_set_text(legend, "气体阻值 (kΩ)");
+    lv_label_set_text(legend, "阻值大小 (kΩ)");
     lv_obj_set_style_text_font(legend, &ui_font_prompt_cn_12, 0);
     lv_obj_set_style_text_color(legend, lv_color_hex(0xFBBF24), 0);
 
@@ -560,16 +562,16 @@ static void monitor_screen_init(void)
     lv_obj_set_style_text_color(axis_unit, lv_color_hex(0x607780), 0);
 
     lv_obj_t *axis_time = lv_label_create(panel);
-    lv_obj_set_size(axis_time, 32, 14);
-    lv_obj_set_pos(axis_time, 170, 108);
-    lv_obj_set_style_text_align(axis_time, LV_TEXT_ALIGN_RIGHT, 0);
-    lv_label_set_text(axis_time, "时间");
+    lv_obj_set_size(axis_time, 56, 14);
+    lv_obj_set_pos(axis_time, 80, 106);
+    lv_obj_set_style_text_align(axis_time, LV_TEXT_ALIGN_CENTER, 0);
+    lv_label_set_text(axis_time, "时间(s)");
     lv_obj_set_style_text_font(axis_time, &ui_font_prompt_cn_12, 0);
     lv_obj_set_style_text_color(axis_time, lv_color_hex(0x607780), 0);
 
     lv_obj_t *y_axis = lv_obj_create(panel);
     lv_obj_remove_style_all(y_axis);
-    lv_obj_set_size(y_axis, 1, 92);
+    lv_obj_set_size(y_axis, 1, 84);
     lv_obj_set_pos(y_axis, 26, 20);
     lv_obj_set_style_bg_color(y_axis, lv_color_hex(0x607780), 0);
     lv_obj_set_style_bg_opa(y_axis, LV_OPA_COVER, 0);
@@ -577,12 +579,12 @@ static void monitor_screen_init(void)
     lv_obj_t *x_axis = lv_obj_create(panel);
     lv_obj_remove_style_all(x_axis);
     lv_obj_set_size(x_axis, 182, 1);
-    lv_obj_set_pos(x_axis, 26, 112);
+    lv_obj_set_pos(x_axis, 26, 104);
     lv_obj_set_style_bg_color(x_axis, lv_color_hex(0x607780), 0);
     lv_obj_set_style_bg_opa(x_axis, LV_OPA_COVER, 0);
 
     s_monitor_chart = lv_chart_create(panel);
-    lv_obj_set_size(s_monitor_chart, 178, 90);
+    lv_obj_set_size(s_monitor_chart, 178, 84);
     lv_obj_set_pos(s_monitor_chart, 28, 20);
     lv_obj_set_style_bg_color(s_monitor_chart, lv_color_hex(0x081217), 0);
     lv_obj_set_style_bg_opa(s_monitor_chart, LV_OPA_COVER, 0);
@@ -622,6 +624,8 @@ static void monitor_screen_init(void)
     lv_obj_set_style_text_color(s_monitor_values3, lv_color_hex(0xB8CDD2), 0);
     lv_obj_set_style_text_align(s_monitor_values3, LV_TEXT_ALIGN_LEFT, 0);
 
+    s_monitor_last_sample_count = 0;
+    s_monitor_has_sample = false;
     refresh_values_for(SCR_MONITOR);
 }
 
@@ -1495,8 +1499,11 @@ static void refresh_monitor(void)
     sensor_get(&d);
 
     int rs_value = monitor_norm(d.gas_valid ? d.rs : NAN, 0.0f, 100.0f);
-    if (object_ok(s_monitor_chart)) {
+    if (object_ok(s_monitor_chart) &&
+        (!s_monitor_has_sample || d.sample_count != s_monitor_last_sample_count)) {
         lv_chart_set_next_value(s_monitor_chart, s_monitor_rs_series, rs_value);
+        s_monitor_last_sample_count = d.sample_count;
+        s_monitor_has_sample = true;
     }
 
     char line1[64], line2[64], line3[64];
