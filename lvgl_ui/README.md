@@ -20,3 +20,4 @@
 ## 注意
 
 `.ai-workspace/` 是本机 AiDoGUI 会话目录，含有临时令牌，已在根 `.gitignore` 排除，**不要提交**。
+- 当前固件的 4 键操作、页面矩阵、提示音触发点和演示流程见 `..\docs\UI_OPERATION.md`。

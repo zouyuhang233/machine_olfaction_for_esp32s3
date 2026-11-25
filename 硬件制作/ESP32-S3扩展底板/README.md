@@ -39,6 +39,7 @@
   - `J4`（1×4，可选）：`1=5V_OUT / 2=USB_D− / 3=USB_D+ / 4=GND`，用于外接 U 盘/键盘等 USB 设备（仅当开发板 USB OTG 走这两脚时使用）。
 - **③ 约束**：GPIO0/45/46（strapping）与 GPIO19/20（原生 USB）**不得加任何上拉/下拉**；GPIO26–32 为 Flash/PSRAM 专用，未引出。
 - **串口 TX/RX 已标注**：原理图每个引脚下方用灰/绿小字标出备用功能，其中 **UART0 调试/下载 = GPIO43(TX)/GPIO44(RX)**、**UART1 = GPIO17(TX1)/GPIO18(RX1)** 用绿字突出；PCB 丝印也写成 `GPIO43·TX / GPIO44·RX / GPIO17·TX1 / GPIO18·RX1`。
+- **当前整机复用提醒**：GPIO17/18 只是 ESP32-S3 的 UART1 默认复用引脚，不代表当前项目空闲。**GPIO18 已被 BME690 I2C SCL 占用**，所以语音模块 UART 不使用 17/18；当前已固定用 GPIO15(TX)/GPIO16(RX)，9600 8N1，详见 [整机硬件接线](../../docs/HARDWARE.md) 与 [语音模块接线](../../器件文档/语音模块与喇叭/README.md)。
 
 ---
 
