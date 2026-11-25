@@ -44,6 +44,7 @@ typedef enum {
     SCR_DISPLAY_LIGHT,
     SCR_SYSTEM_DARK,
     SCR_SYSTEM_LIGHT,
+    SCR_MONITOR,
     SCR_COUNT,
 } ui_screen_id_t;
 
@@ -92,6 +93,18 @@ static lv_obj_t *s_confirm_labels[2];
 
 static lv_timer_t *s_input_timer;
 static lv_timer_t *s_value_timer;
+
+static lv_obj_t *s_monitor_root;
+static lv_obj_t *s_monitor_stage;
+static lv_obj_t *s_monitor_chart;
+static lv_chart_series_t *s_monitor_temp_series;
+static lv_chart_series_t *s_monitor_humi_series;
+static lv_chart_series_t *s_monitor_press_series;
+static lv_chart_series_t *s_monitor_rs_series;
+static lv_obj_t *s_monitor_values1;
+static lv_obj_t *s_monitor_values2;
+static lv_obj_t *s_monitor_status_wifi;
+static lv_obj_t *s_monitor_status_bt;
 
 static lv_obj_t *s_menu_scroll_dark;
 static lv_obj_t *s_menu_scroll_light;
@@ -183,6 +196,7 @@ static ui_screen_id_t active_screen_id(void)
     if (scr == aidogui_ui.displaylight.root) return SCR_DISPLAY_LIGHT;
     if (scr == aidogui_ui.systemdark.root) return SCR_SYSTEM_DARK;
     if (scr == aidogui_ui.systemlight.root) return SCR_SYSTEM_LIGHT;
+    if (scr == s_monitor_root) return SCR_MONITOR;
     return SCR_NONE;
 }
 
@@ -412,6 +426,7 @@ static lv_obj_t *screen_root_for(ui_screen_id_t id)
     case SCR_DISPLAY_LIGHT: return aidogui_ui.displaylight.root;
     case SCR_SYSTEM_DARK: return aidogui_ui.systemdark.root;
     case SCR_SYSTEM_LIGHT: return aidogui_ui.systemlight.root;
+    case SCR_MONITOR: return s_monitor_root;
     default: return NULL;
     }
 }
@@ -436,8 +451,166 @@ static lv_obj_t *screen_stage_for(ui_screen_id_t id)
     case SCR_DISPLAY_LIGHT: return aidogui_ui.displaylight.PageStage;
     case SCR_SYSTEM_DARK: return aidogui_ui.systemdark.PageStage;
     case SCR_SYSTEM_LIGHT: return aidogui_ui.systemlight.PageStage;
+    case SCR_MONITOR: return s_monitor_stage;
     default: return NULL;
     }
+}
+
+static void refresh_values_for(ui_screen_id_t id);
+
+static lv_obj_t *monitor_status_label(lv_obj_t *parent, int x, const char *glyph, lv_color_t color)
+{
+    lv_obj_t *label = lv_label_create(parent);
+    lv_obj_set_size(label, 20, 22);
+    lv_obj_set_pos(label, x, 2);
+    lv_label_set_text(label, glyph);
+    lv_obj_set_style_text_font(label, &ui_font_ai_ai_font_a2efc8b8e51fbd031a7142a1_ttf_20, 0);
+    lv_obj_set_style_text_color(label, color, 0);
+    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
+    return label;
+}
+
+static void monitor_screen_init(void)
+{
+    if (object_ok(s_monitor_root)) return;
+
+    s_monitor_root = lv_obj_create(NULL);
+    lv_obj_remove_flag(s_monitor_root, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_size(s_monitor_root, UI_WIDTH, UI_HEIGHT);
+
+    s_monitor_stage = lv_obj_create(s_monitor_root);
+    lv_obj_remove_style_all(s_monitor_stage);
+    lv_obj_set_size(s_monitor_stage, UI_WIDTH, UI_HEIGHT);
+    lv_obj_set_pos(s_monitor_stage, 0, 0);
+    lv_obj_remove_flag(s_monitor_stage, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(s_monitor_stage, lv_color_hex(0x05080C), 0);
+    lv_obj_set_style_bg_opa(s_monitor_stage, LV_OPA_COVER, 0);
+
+    lv_obj_t *brand_ring = lv_obj_create(s_monitor_stage);
+    lv_obj_remove_style_all(brand_ring);
+    lv_obj_set_size(brand_ring, 16, 16);
+    lv_obj_set_pos(brand_ring, 12, 6);
+    lv_obj_set_style_radius(brand_ring, LV_RADIUS_CIRCLE, 0);
+    lv_obj_set_style_bg_opa(brand_ring, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(brand_ring, 1, 0);
+    lv_obj_set_style_border_color(brand_ring, lv_color_hex(0x2B5A65), 0);
+
+    lv_obj_t *brand_core = lv_obj_create(s_monitor_stage);
+    lv_obj_remove_style_all(brand_core);
+    lv_obj_set_size(brand_core, 6, 6);
+    lv_obj_set_pos(brand_core, 17, 11);
+    lv_obj_set_style_radius(brand_core, LV_RADIUS_CIRCLE, 0);
+    lv_obj_set_style_bg_color(brand_core, lv_color_hex(0x22D3EE), 0);
+    lv_obj_set_style_bg_opa(brand_core, LV_OPA_COVER, 0);
+
+    lv_obj_t *title = lv_label_create(s_monitor_stage);
+    lv_obj_set_size(title, 130, 24);
+    lv_obj_set_pos(title, 34, 2);
+    lv_label_set_text(title, "监测数据");
+    lv_obj_set_style_text_font(title, &ui_font_prompt_cn_20, 0);
+    lv_obj_set_style_text_color(title, lv_color_hex(0xD7E8EB), 0);
+
+    s_monitor_status_wifi = monitor_status_label(s_monitor_stage, 174, "\xEE\x9C\x81", lv_color_hex(0x73C9FF));
+    s_monitor_status_bt = monitor_status_label(s_monitor_stage, 196, "\xEE\x9C\x82", lv_color_hex(0x69D6E7));
+    monitor_status_label(s_monitor_stage, 218, "\xEE\xA1\x96", lv_color_hex(0x8BEFD2));
+
+    lv_obj_t *top_rule = lv_obj_create(s_monitor_stage);
+    lv_obj_remove_style_all(top_rule);
+    lv_obj_set_size(top_rule, 216, 1);
+    lv_obj_set_pos(top_rule, 12, 30);
+    lv_obj_set_style_bg_color(top_rule, lv_color_hex(0x17323A), 0);
+    lv_obj_set_style_bg_opa(top_rule, LV_OPA_COVER, 0);
+
+    lv_obj_t *panel = lv_obj_create(s_monitor_stage);
+    lv_obj_remove_style_all(panel);
+    lv_obj_set_size(panel, 216, 136);
+    lv_obj_set_pos(panel, 12, 36);
+    lv_obj_remove_flag(panel, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(panel, lv_color_hex(0x081217), 0);
+    lv_obj_set_style_bg_opa(panel, LV_OPA_COVER, 0);
+    lv_obj_set_style_radius(panel, 8, 0);
+    lv_obj_set_style_border_width(panel, 1, 0);
+    lv_obj_set_style_border_color(panel, lv_color_hex(0x17323A), 0);
+
+    const char *legend_text[] = {"温度", "湿度", "气压", "气阻"};
+    const lv_color_t legend_color[] = {
+        lv_color_hex(0x22D3EE), lv_color_hex(0x55F2B6),
+        lv_color_hex(0xA78BFA), lv_color_hex(0xFBBF24)
+    };
+    for (int i = 0; i < 4; i++) {
+        lv_obj_t *legend = lv_label_create(panel);
+        lv_obj_set_size(legend, 46, 16);
+        lv_obj_set_pos(legend, 8 + i * 51, 3);
+        lv_label_set_text(legend, legend_text[i]);
+        lv_obj_set_style_text_font(legend, &ui_font_prompt_cn_14, 0);
+        lv_obj_set_style_text_color(legend, legend_color[i], 0);
+        lv_obj_set_style_text_align(legend, LV_TEXT_ALIGN_CENTER, 0);
+    }
+
+    lv_obj_t *axis_100 = lv_label_create(panel);
+    lv_obj_set_pos(axis_100, 2, 22);
+    lv_label_set_text(axis_100, "100");
+    lv_obj_set_style_text_font(axis_100, &ui_font_prompt_cn_14, 0);
+    lv_obj_set_style_text_color(axis_100, lv_color_hex(0x607780), 0);
+
+    lv_obj_t *axis_0 = lv_label_create(panel);
+    lv_obj_set_pos(axis_0, 6, 112);
+    lv_label_set_text(axis_0, "0");
+    lv_obj_set_style_text_font(axis_0, &ui_font_prompt_cn_14, 0);
+    lv_obj_set_style_text_color(axis_0, lv_color_hex(0x607780), 0);
+
+    lv_obj_t *axis_time = lv_label_create(panel);
+    lv_obj_set_pos(axis_time, 166, 113);
+    lv_label_set_text(axis_time, "时间");
+    lv_obj_set_style_text_font(axis_time, &ui_font_prompt_cn_14, 0);
+    lv_obj_set_style_text_color(axis_time, lv_color_hex(0x607780), 0);
+
+    s_monitor_chart = lv_chart_create(panel);
+    lv_obj_set_size(s_monitor_chart, 180, 102);
+    lv_obj_set_pos(s_monitor_chart, 28, 20);
+    lv_obj_set_style_bg_color(s_monitor_chart, lv_color_hex(0x081217), 0);
+    lv_obj_set_style_bg_opa(s_monitor_chart, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(s_monitor_chart, 0, 0);
+    lv_obj_set_style_pad_all(s_monitor_chart, 0, 0);
+    lv_obj_set_style_line_width(s_monitor_chart, 1, LV_PART_MAIN);
+    lv_obj_set_style_line_color(s_monitor_chart, lv_color_hex(0x17323A), LV_PART_MAIN);
+    lv_obj_set_style_line_width(s_monitor_chart, 2, LV_PART_ITEMS);
+    lv_chart_set_type(s_monitor_chart, LV_CHART_TYPE_LINE);
+    lv_chart_set_point_count(s_monitor_chart, 32);
+    lv_chart_set_div_line_count(s_monitor_chart, 5, 7);
+    lv_chart_set_axis_range(s_monitor_chart, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
+    s_monitor_temp_series = lv_chart_add_series(s_monitor_chart, legend_color[0], LV_CHART_AXIS_PRIMARY_Y);
+    s_monitor_humi_series = lv_chart_add_series(s_monitor_chart, legend_color[1], LV_CHART_AXIS_PRIMARY_Y);
+    s_monitor_press_series = lv_chart_add_series(s_monitor_chart, legend_color[2], LV_CHART_AXIS_PRIMARY_Y);
+    s_monitor_rs_series = lv_chart_add_series(s_monitor_chart, legend_color[3], LV_CHART_AXIS_PRIMARY_Y);
+    lv_chart_set_all_values(s_monitor_chart, s_monitor_temp_series, 0);
+    lv_chart_set_all_values(s_monitor_chart, s_monitor_humi_series, 0);
+    lv_chart_set_all_values(s_monitor_chart, s_monitor_press_series, 0);
+    lv_chart_set_all_values(s_monitor_chart, s_monitor_rs_series, 0);
+
+    s_monitor_values1 = lv_label_create(s_monitor_stage);
+    lv_obj_set_size(s_monitor_values1, 216, 20);
+    lv_obj_set_pos(s_monitor_values1, 12, 176);
+    lv_obj_set_style_text_font(s_monitor_values1, &ui_font_prompt_cn_16, 0);
+    lv_obj_set_style_text_color(s_monitor_values1, lv_color_hex(0xD7E8EB), 0);
+    lv_obj_set_style_text_align(s_monitor_values1, LV_TEXT_ALIGN_CENTER, 0);
+
+    s_monitor_values2 = lv_label_create(s_monitor_stage);
+    lv_obj_set_size(s_monitor_values2, 216, 20);
+    lv_obj_set_pos(s_monitor_values2, 12, 196);
+    lv_obj_set_style_text_font(s_monitor_values2, &ui_font_prompt_cn_16, 0);
+    lv_obj_set_style_text_color(s_monitor_values2, lv_color_hex(0xB8CDD2), 0);
+    lv_obj_set_style_text_align(s_monitor_values2, LV_TEXT_ALIGN_CENTER, 0);
+
+    lv_obj_t *hint = lv_label_create(s_monitor_stage);
+    lv_obj_set_size(hint, 216, 16);
+    lv_obj_set_pos(hint, 12, 218);
+    lv_label_set_text(hint, "左键返回主页");
+    lv_obj_set_style_text_font(hint, &ui_font_prompt_cn_14, 0);
+    lv_obj_set_style_text_color(hint, lv_color_hex(0x91AAB0), 0);
+    lv_obj_set_style_text_align(hint, LV_TEXT_ALIGN_CENTER, 0);
+
+    refresh_values_for(SCR_MONITOR);
 }
 
 static void init_screen_for(ui_screen_id_t id)
@@ -460,6 +633,7 @@ static void init_screen_for(ui_screen_id_t id)
     case SCR_DISPLAY_LIGHT: ui_displaylight_screen_init(); break;
     case SCR_SYSTEM_DARK: ui_systemdark_screen_init(); break;
     case SCR_SYSTEM_LIGHT: ui_systemlight_screen_init(); break;
+    case SCR_MONITOR: monitor_screen_init(); break;
     default: break;
     }
 }
@@ -647,6 +821,10 @@ static void status_icons_for(ui_screen_id_t id, lv_obj_t **wifi, lv_obj_t **ble)
     case SCR_SYSTEM_LIGHT:
         *wifi = aidogui_ui.systemlight.StatusWifi;
         *ble = aidogui_ui.systemlight.StatusBluetooth;
+        break;
+    case SCR_MONITOR:
+        *wifi = s_monitor_status_wifi;
+        *ble = s_monitor_status_bt;
         break;
     default:
         break;
@@ -1039,6 +1217,12 @@ static void navigate_to(ui_screen_id_t target, int animation)
     init_screen_for(target);
     prepare_screen_for_display(target);
     switch (target) {
+    case SCR_HOME:
+        _ui_screen_change_ex(&aidogui_ui.screen1.root, animation, 220, 0, false, true);
+        break;
+    case SCR_MONITOR:
+        _ui_screen_change_ex(&s_monitor_root, animation, 260, 0, false, true);
+        break;
     case SCR_MENU_DARK:
         _ui_screen_change_ex(&aidogui_ui.menu.root, animation, 220, 0, false, true);
         break;
@@ -1284,6 +1468,46 @@ static void refresh_result(void)
     }
 }
 
+static int monitor_norm(float value, float min_value, float max_value)
+{
+    if (!isfinite(value) || max_value <= min_value) return 0;
+    float normalized = (value - min_value) * 100.0f / (max_value - min_value);
+    if (normalized < 0.0f) normalized = 0.0f;
+    if (normalized > 100.0f) normalized = 100.0f;
+    return (int)(normalized + 0.5f);
+}
+
+static void refresh_monitor(void)
+{
+    sensor_data_t d;
+    sensor_get(&d);
+
+    int temp_value = monitor_norm(d.valid ? d.temp : NAN, 0.0f, 50.0f);
+    int humi_value = monitor_norm(d.valid ? d.humi : NAN, 0.0f, 100.0f);
+    int press_value = monitor_norm(d.valid ? d.press : NAN, 950.0f, 1050.0f);
+    int rs_value = monitor_norm(d.gas_valid ? d.rs : NAN, 0.0f, 200.0f);
+
+    if (object_ok(s_monitor_chart)) {
+        lv_chart_set_next_value(s_monitor_chart, s_monitor_temp_series, temp_value);
+        lv_chart_set_next_value(s_monitor_chart, s_monitor_humi_series, humi_value);
+        lv_chart_set_next_value(s_monitor_chart, s_monitor_press_series, press_value);
+        lv_chart_set_next_value(s_monitor_chart, s_monitor_rs_series, rs_value);
+    }
+
+    char line1[64], line2[64];
+    if (d.valid && isfinite(d.temp)) snprintf(line1, sizeof(line1), "温 %.1f°C    湿 %.0f%%", d.temp, d.humi);
+    else snprintf(line1, sizeof(line1), "温 --    湿 --");
+    if (d.valid && isfinite(d.press) && d.gas_valid && isfinite(d.rs)) {
+        snprintf(line2, sizeof(line2), "压 %.0f hPa    阻 %.1f kΩ", d.press, d.rs);
+    } else if (d.valid && isfinite(d.press)) {
+        snprintf(line2, sizeof(line2), "压 %.0f hPa    阻 --", d.press);
+    } else {
+        snprintf(line2, sizeof(line2), "压 --    阻 --");
+    }
+    set_label_text(s_monitor_values1, line1);
+    set_label_text(s_monitor_values2, line2);
+}
+
 static void refresh_sensor(ui_screen_id_t id)
 {
     sensor_data_t d;
@@ -1377,6 +1601,7 @@ static void refresh_values_for(ui_screen_id_t id)
     switch (id) {
     case SCR_DETECTION: refresh_detection(); break;
     case SCR_RESULT: refresh_result(); break;
+    case SCR_MONITOR: refresh_monitor(); break;
     case SCR_SENSOR_DARK:
     case SCR_SENSOR_LIGHT: refresh_sensor(id); break;
     case SCR_NETWORK_DARK:
@@ -1668,7 +1893,13 @@ static void handle_key(button_id_t key, bool repeat)
     switch (s_screen_id) {
     case SCR_HOME:
         if (key == BTN_OK) start_measurement();
+        else if (key == BTN_RIGHT) navigate_to(SCR_MONITOR, LV_SCREEN_LOAD_ANIM_MOVE_LEFT);
         else if (key == BTN_BACK) navigate_menu();
+        break;
+    case SCR_MONITOR:
+        if (key == BTN_LEFT || key == BTN_BACK) {
+            navigate_to(SCR_HOME, LV_SCREEN_LOAD_ANIM_MOVE_RIGHT);
+        }
         break;
     case SCR_DETECTION:
         if (key == BTN_OK) show_result();
