@@ -67,10 +67,24 @@ bool net_ble_connected(void);
 const char *net_ble_status_text(void);
 const char *net_ble_name(void);
 
+typedef enum {
+    AUDIO_PROMPT_START_DETECTION = 0,
+    AUDIO_PROMPT_DETECTION_DONE,
+    AUDIO_PROMPT_DETECTION_CANCELLED,
+    AUDIO_PROMPT_SENSOR_ERROR,
+    AUDIO_PROMPT_SETTINGS_SAVED,
+    AUDIO_PROMPT_FEATURE_ON,
+    AUDIO_PROMPT_FEATURE_OFF,
+    AUDIO_PROMPT_TEST,
+    AUDIO_PROMPT_SAVE_ERROR,
+    AUDIO_PROMPT_COUNT,
+} audio_prompt_id_t;
+
 bool audio_prompt_enabled(void);
 void audio_set_prompt_enabled(bool en);
 uint8_t audio_volume(void);
 void audio_set_volume(uint8_t v);
+bool audio_prompt_play(audio_prompt_id_t prompt);
 void audio_play_test(void);
 
 uint8_t modbus_addr(void);

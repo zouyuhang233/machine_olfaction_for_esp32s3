@@ -975,6 +975,7 @@ static void finish_edit_mode(bool commit)
 {
     bool need_save = false;
     bool need_refresh = false;
+    bool saved = false;
 
     if (s_audio_dirty) {
         if (commit) {
@@ -995,9 +996,13 @@ static void finish_edit_mode(bool commit)
         }
         s_brightness_dirty = false;
     }
-    if (need_save) settings_save();
+    if (need_save) {
+        settings_save();
+        saved = true;
+    }
     s_edit_mode = EDIT_NONE;
     if (need_refresh) refresh_values_for(s_screen_id);
+    if (saved) audio_prompt_play(AUDIO_PROMPT_SETTINGS_SAVED);
 }
 
 static void close_confirm(void)
@@ -1035,6 +1040,7 @@ static void confirm_execute(void)
     close_confirm();
     if (action == CONFIRM_RESET) {
         settings_reset_defaults();
+        audio_prompt_play(AUDIO_PROMPT_SETTINGS_SAVED);
         bsp_backlight_set(settings_get()->brightness);
         lcd_set_rotation(settings_get()->rotation);
         lv_obj_invalidate(lv_screen_active());
@@ -1315,11 +1321,20 @@ static void cancel_measure_timer(void)
 static void show_result(void)
 {
     cancel_measure_timer();
-    history_capture_current();
+    bool saved = history_capture_current();
+    sensor_data_t d;
+    sensor_get(&d);
     init_screen_for(SCR_RESULT);
     prepare_screen_for_display(SCR_RESULT);
     _ui_screen_change_ex(&aidogui_ui.result.root, LV_SCREEN_LOAD_ANIM_FADE_IN, 300, 0, false, true);
     s_input_lock_until = lv_tick_get() + SCREEN_LOCK_MS;
+    if (!d.valid) {
+        audio_prompt_play(AUDIO_PROMPT_SENSOR_ERROR);
+    } else if (saved) {
+        audio_prompt_play(AUDIO_PROMPT_DETECTION_DONE);
+    } else {
+        audio_prompt_play(AUDIO_PROMPT_SAVE_ERROR);
+    }
 }
 
 static void measure_done_cb(lv_timer_t *timer)
@@ -1339,11 +1354,13 @@ static void start_measurement(void)
     cancel_measure_timer();
     s_measure_timer = lv_timer_create(measure_done_cb, 3200, NULL);
     lv_timer_set_repeat_count(s_measure_timer, 1);
+    audio_prompt_play(AUDIO_PROMPT_START_DETECTION);
 }
 
 static void cancel_measurement(void)
 {
     cancel_measure_timer();
+    audio_prompt_play(AUDIO_PROMPT_DETECTION_CANCELLED);
     navigate_home();
 }
 
@@ -1699,6 +1716,7 @@ static void sync_screen(void)
 static void toggle_wifi(void)
 {
     net_wifi_set_enabled(!net_wifi_enabled());
+    audio_prompt_play(net_wifi_enabled() ? AUDIO_PROMPT_FEATURE_ON : AUDIO_PROMPT_FEATURE_OFF);
     refresh_network(s_screen_id);
     refresh_top_status(s_screen_id);
     show_toast(net_wifi_enabled() ? "无线网络已开启" : "无线网络已关闭");
@@ -1707,6 +1725,7 @@ static void toggle_wifi(void)
 static void toggle_ble(void)
 {
     net_ble_set_enabled(!net_ble_enabled());
+    audio_prompt_play(net_ble_enabled() ? AUDIO_PROMPT_FEATURE_ON : AUDIO_PROMPT_FEATURE_OFF);
     refresh_ble(s_screen_id);
     refresh_top_status(s_screen_id);
     show_toast(net_ble_enabled() ? "蓝牙已开启" : "蓝牙已关闭");
@@ -1743,6 +1762,7 @@ static void rotate_display(int direction)
     lv_obj_invalidate(lv_screen_active());
     lv_obj_invalidate(lv_layer_top());
     refresh_display(s_screen_id);
+    audio_prompt_play(AUDIO_PROMPT_SETTINGS_SAVED);
     show_toast("屏幕已旋转");
 }
 
@@ -1760,6 +1780,7 @@ static void cycle_baud(int direction)
     }
     modbus_set_baud(bauds[next]);
     refresh_system(s_screen_id);
+    audio_prompt_play(AUDIO_PROMPT_SETTINGS_SAVED);
     char text[24];
     snprintf(text, sizeof(text), "波特率 %lu", (unsigned long)bauds[next]);
     show_toast(text);
@@ -1844,7 +1865,10 @@ static void handle_audio_key(button_id_t key, bool repeat)
             s_edit_mode = EDIT_VOLUME;
             show_toast("方向键调节  确认保存  返回取消");
         } else if (s_focus_index == 1) {
-            audio_set_prompt_enabled(!audio_prompt_enabled());
+            bool enable = !audio_prompt_enabled();
+            if (!enable) audio_prompt_play(AUDIO_PROMPT_FEATURE_OFF);
+            audio_set_prompt_enabled(enable);
+            if (enable) audio_prompt_play(AUDIO_PROMPT_FEATURE_ON);
             refresh_audio(s_screen_id);
             show_toast(audio_prompt_enabled() ? "提示音已开启" : "提示音已关闭");
         } else if (s_focus_index == 2) {

@@ -4,6 +4,7 @@ idf_component_register(
         "src/services.c"
     INCLUDE_DIRS "include"
     REQUIRES
+        driver
         nvs_flash
         esp_timer
         esp_hw_support

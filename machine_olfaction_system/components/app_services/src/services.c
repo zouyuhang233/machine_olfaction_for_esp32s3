@@ -6,10 +6,12 @@
 
 #include "app_settings.h"
 #include "bme690.h"
+#include "driver/uart.h"
 #include "esp_log.h"
 #include "esp_mac.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "nvs.h"
@@ -21,6 +23,14 @@ static const char *TAG = "services";
 #define SENSOR_TASK_STACK    6144
 #define SENSOR_TASK_PRIO     5
 
+#define SU03T_UART_PORT      UART_NUM_1
+#define SU03T_UART_TX_GPIO   15
+#define SU03T_UART_RX_GPIO   16
+#define SU03T_UART_BAUD      9600
+#define SU03T_TX_GAP_MS      80
+#define AUDIO_TASK_STACK     3072
+#define AUDIO_TASK_PRIO      3
+
 typedef struct {
     sensor_data_t data;
     int64_t sample_us;
@@ -28,6 +38,12 @@ typedef struct {
 
 static sensor_cache_t s_sensor_cache;
 static SemaphoreHandle_t s_sensor_lock;
+
+static QueueHandle_t s_audio_queue;
+static bool s_audio_ready;
+static const uint8_t s_audio_msgno[AUDIO_PROMPT_COUNT] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+static void audio_init(void);
 
 #define HISTORY_MAGIC 0x48495354U
 #define HISTORY_NVS_NAMESPACE "olf_history"
@@ -263,6 +279,7 @@ void services_init(void)
     sensor_cache_reset();
     s_sensor_lock = xSemaphoreCreateMutex();
     history_init();
+    audio_init();
 
     if (s_sensor_lock == NULL) {
         ESP_LOGE(TAG, "传感器缓存互斥锁创建失败");
@@ -274,7 +291,7 @@ void services_init(void)
                  BME690_SAMPLE_PERIOD_MS);
     }
 
-    ESP_LOGI(TAG, "服务层初始化（Wi-Fi/BLE/音频/Modbus 仍为模拟实现）");
+    ESP_LOGI(TAG, "SU-03T UART1 ready: TX GPIO15, RX GPIO16, 9600 8N1");
 }
 
 void services_update(void)
@@ -432,10 +449,78 @@ void audio_set_volume(uint8_t v)
     settings_save();
 }
 
+static void audio_tx_task(void *arg)
+{
+    (void)arg;
+    uint8_t msgno;
+    for (;;) {
+        if (xQueueReceive(s_audio_queue, &msgno, portMAX_DELAY) != pdTRUE) continue;
+        const uint8_t frame[] = {0xAA, 0x55, msgno, 0x55, 0xAA};
+        int written = uart_write_bytes(SU03T_UART_PORT, frame, sizeof(frame));
+        if (written == (int)sizeof(frame)) {
+            ESP_LOGI(TAG, "SU-03T prompt frame sent");
+        } else {
+            ESP_LOGW(TAG, "SU-03T prompt frame failed");
+        }
+        vTaskDelay(pdMS_TO_TICKS(SU03T_TX_GAP_MS));
+    }
+}
+
+static void audio_init(void)
+{
+    s_audio_queue = xQueueCreate(1, sizeof(uint8_t));
+    if (s_audio_queue == NULL) {
+        ESP_LOGE(TAG, "SU-03T queue create failed");
+        return;
+    }
+
+    const uart_config_t cfg = {
+        .baud_rate = SU03T_UART_BAUD,
+        .data_bits = UART_DATA_8_BITS,
+        .parity = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .source_clk = UART_SCLK_DEFAULT,
+    };
+    esp_err_t err = uart_param_config(SU03T_UART_PORT, &cfg);
+    if (err == ESP_OK) {
+        err = uart_set_pin(SU03T_UART_PORT, SU03T_UART_TX_GPIO, SU03T_UART_RX_GPIO,
+                           UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
+    if (err == ESP_OK) {
+        err = uart_driver_install(SU03T_UART_PORT, 256, 512, 0, NULL, 0);
+    }
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "SU-03T UART init failed");
+        vQueueDelete(s_audio_queue);
+        s_audio_queue = NULL;
+        return;
+    }
+
+    if (xTaskCreate(audio_tx_task, "su03t_audio", AUDIO_TASK_STACK,
+                   NULL, AUDIO_TASK_PRIO, NULL) != pdPASS) {
+        ESP_LOGE(TAG, "SU-03T audio task create failed");
+        uart_driver_delete(SU03T_UART_PORT);
+        vQueueDelete(s_audio_queue);
+        s_audio_queue = NULL;
+        return;
+    }
+    s_audio_ready = true;
+    ESP_LOGI(TAG, "SU-03T prompts ready on UART1");
+}
+
+bool audio_prompt_play(audio_prompt_id_t prompt)
+{
+    if (!s_audio_ready) return false;
+    if ((unsigned)prompt >= (unsigned)AUDIO_PROMPT_COUNT) return false;
+    if (prompt != AUDIO_PROMPT_TEST && !audio_prompt_enabled()) return false;
+    uint8_t msgno = s_audio_msgno[prompt];
+    return xQueueOverwrite(s_audio_queue, &msgno) == pdTRUE;
+}
+
 void audio_play_test(void)
 {
-    ESP_LOGI(TAG, "测试播放（LU-03T 串口待接入），音量 %d，提示音 %s",
-             audio_volume(), audio_prompt_enabled() ? "开" : "关");
+    (void)audio_prompt_play(AUDIO_PROMPT_TEST);
 }
 
 uint8_t modbus_addr(void)

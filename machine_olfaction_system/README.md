@@ -14,7 +14,7 @@
 | 按键 | ✅ **4 键**：左 / 右 / 确认 / 返回，消抖 + 左右连发；GPIO21/38 已停用 |
 | 稳定性 | ✅ 启动约 1.5 s；17 页自动巡页无崩溃、无看门狗复位；LVGL 栈 24 KB，页面按需创建 |
 | BME690 | ✅ I²C 实机识别（Chip_Id=0x61 / Variant_Id=0x02）并周期采样温湿度、气压、Rs |
-| 业务代码 | ⏳ BSEC/推理、Modbus RTU 从站、真实 Wi‑Fi/BLE/音频仍待接入（当前为模拟服务） |
+| 业务代码 | 待接入：真实 Wi-Fi/BLE 与 Modbus RTU；SU-03T 提示音已通过 UART1 接入 |
 
 ## 目录
 
@@ -24,7 +24,7 @@ components/bsp/          引脚、SPI2 DMA、复位、LEDC 背光
 components/lcd/          ST7789 240×240 驱动、旋转/偏移、RGB565、XRGB8888 抖动
 components/buttons/      4 键轮询、12 ms 消抖、左右键按住连发
 components/lvgl_port/    LVGL 9.4 移植、1 ms tick、40 行绘制缓冲、24 KB 任务栈
-components/app_services/ NVS 设置、BME690 服务、模拟网络/音频/Modbus
+components/app_services/ NVS 设置、BME690 服务、SU-03T 提示音串口、模拟网络/Modbus
 components/bme690/       BME690 I²C 驱动
 components/ui/           AiDoGUI 240×240 导出代码 + app_ui.c 四键交互 + galaxy_effect.c
 partitions.csv           NVS 24K / phy_init 4K / factory 4M / storage ~11.7M / coredump 512K
@@ -72,6 +72,17 @@ build/                   构建产物（gitignore）
 - **连接成功**：图标变为绿色，右下角出现绿色勾选徽标，并带 220 ms 淡入动画。
 - 所有页面每 500 ms 同步一次状态；切换昼夜主题时自动使用对应的高对比配色。
 - Wi‑Fi 与 BLE 当前仍为模拟服务：真实 Wi‑Fi/BLE 协议接入前，开启后只显示橘黄色连接/广播状态，不再用延时伪造成已连接；只有 `net_wifi_connected()` / `net_ble_connected()` 返回成功才显示绿色勾选。
+
+## 语音模块与喇叭（提示音已接入）
+
+- **方案**：LU-03T / SU-03T 离线语音模块，自带喇叭功放；不使用 MAX98357A/I²S。
+- **喇叭**：接模块 `SPK+`（18）/ `SPK-`（17），实物白色 2Pin 座即喇叭输出；4Ω/8Ω 均可。
+- **禁止**：不要把喇叭接到 ESP32 GPIO、3.3V 或 5V；SPK+/SPK- 是差分输出，不能把任意一端接 GND。
+- **模块供电**：`VCC` 接 **5V**（至少 550mA，建议 5V/1A），`GND` 与 ESP32 共地；`3V3` 是模块输出，不要当输入。
+- **UART 已接入**：ESP32 `GPIO15(TX) → B6(RXD)`、`GPIO16(RX) ← B7(TXD)`，3.3V 逻辑直连，9600 8N1。
+- **不要用 GPIO17/18 接语音**：当前 BME690 已占用 GPIO18 作为 I²C SCL；GPIO17/18 的 UART1 只是扩展板复用标注，不能与当前 I²C 同时使用。
+- **当前状态**：ESP32 固件已按官方 `AA 55 消息号 55 AA` 帧发送 1 到 9 号提示音消息；UI 只入队，独立任务发送，不阻塞 LVGL。模块喇叭接线正确后，还需给模块烧录匹配的串口输入行为。
+- 详细说明：`..\器件文档\语音模块与喇叭\README.md`。
 
 ## 显示实现要点
 
@@ -126,3 +137,4 @@ cmd /c "set PROCESSOR_ARCHITECTURE=AMD64&& set IDF_TOOLS_PATH=C:\Espressif&& set
 | 40007 | 电池电压（mV，上位机 ×0.001） | u16 |
 
 ⚠️ **TVOC/eCO2 不是 BME690 寄存器直读值**，需运行 BSEC 或改为自定义气味指数；尚未接入时不得把原始 Rs 冒充 TVOC/eCO2。
+- 提示音协议与模块配置：`..\器件文档\SU-03T语音模块\提示音串口协议.md`。
