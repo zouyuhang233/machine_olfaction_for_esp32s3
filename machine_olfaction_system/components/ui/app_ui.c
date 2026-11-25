@@ -286,7 +286,7 @@ static lv_obj_t *menu_history_ensure(ui_screen_id_t id)
     lv_obj_t *button = lv_obj_create(parent);
     lv_obj_remove_style_all(button);
     lv_obj_set_size(button, 64, 60);
-    lv_obj_set_pos(button, 76, 160);
+    lv_obj_set_pos(button, 148, 160);
     lv_obj_remove_flag(button, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(button, light ? lv_color_hex(0xFFFFFF) : lv_color_hex(0x081217), 0);
     lv_obj_set_style_bg_opa(button, LV_OPA_COVER, 0);
