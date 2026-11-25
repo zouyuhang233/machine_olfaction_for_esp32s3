@@ -106,7 +106,7 @@ void ui_detection_screen_init(void)
     lv_obj_set_width(aidogui_ui.detection.StatusBattery, 20);
     lv_obj_set_height(aidogui_ui.detection.StatusBattery, 22);
     lv_obj_set_align(aidogui_ui.detection.StatusBattery, LV_ALIGN_TOP_LEFT);
-    lv_obj_set_x(aidogui_ui.detection.StatusBattery, 174);
+    lv_obj_set_x(aidogui_ui.detection.StatusBattery, 218);
     lv_obj_set_y(aidogui_ui.detection.StatusBattery, 2);
     lv_label_set_text(aidogui_ui.detection.StatusBattery, "");
     lv_obj_set_style_text_font(aidogui_ui.detection.StatusBattery, &ui_font_ai_ai_font_a2efc8b8e51fbd031a7142a1_ttf_20, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -128,7 +128,7 @@ void ui_detection_screen_init(void)
     lv_obj_set_width(aidogui_ui.detection.StatusWifi, 20);
     lv_obj_set_height(aidogui_ui.detection.StatusWifi, 22);
     lv_obj_set_align(aidogui_ui.detection.StatusWifi, LV_ALIGN_TOP_LEFT);
-    lv_obj_set_x(aidogui_ui.detection.StatusWifi, 218);
+    lv_obj_set_x(aidogui_ui.detection.StatusWifi, 174);
     lv_obj_set_y(aidogui_ui.detection.StatusWifi, 2);
     lv_label_set_text(aidogui_ui.detection.StatusWifi, "");
     lv_obj_set_style_text_font(aidogui_ui.detection.StatusWifi, &ui_font_ai_ai_font_a2efc8b8e51fbd031a7142a1_ttf_20, LV_PART_MAIN | LV_STATE_DEFAULT);

@@ -135,7 +135,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_width(aidogui_ui.menu.StatusBattery, 20);
     lv_obj_set_height(aidogui_ui.menu.StatusBattery, 22);
     lv_obj_set_align(aidogui_ui.menu.StatusBattery, LV_ALIGN_TOP_LEFT);
-    lv_obj_set_x(aidogui_ui.menu.StatusBattery, 174);
+    lv_obj_set_x(aidogui_ui.menu.StatusBattery, 218);
     lv_obj_set_y(aidogui_ui.menu.StatusBattery, 2);
     lv_label_set_text(aidogui_ui.menu.StatusBattery, "");
     lv_obj_set_style_text_font(aidogui_ui.menu.StatusBattery, &ui_font_ai_ai_font_a2efc8b8e51fbd031a7142a1_ttf_20, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -157,7 +157,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_width(aidogui_ui.menu.StatusWifi, 20);
     lv_obj_set_height(aidogui_ui.menu.StatusWifi, 22);
     lv_obj_set_align(aidogui_ui.menu.StatusWifi, LV_ALIGN_TOP_LEFT);
-    lv_obj_set_x(aidogui_ui.menu.StatusWifi, 218);
+    lv_obj_set_x(aidogui_ui.menu.StatusWifi, 174);
     lv_obj_set_y(aidogui_ui.menu.StatusWifi, 2);
     lv_label_set_text(aidogui_ui.menu.StatusWifi, "");
     lv_obj_set_style_text_font(aidogui_ui.menu.StatusWifi, &ui_font_ai_ai_font_a2efc8b8e51fbd031a7142a1_ttf_20, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -166,10 +166,10 @@ void ui_menu_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menu.StatusWifi, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menu.MenuTitle = lv_label_create(aidogui_ui.menu.MenuStage);
     lv_obj_set_width(aidogui_ui.menu.MenuTitle, 100);
-    lv_obj_set_height(aidogui_ui.menu.MenuTitle, 22);
+    lv_obj_set_height(aidogui_ui.menu.MenuTitle, 28);
     lv_obj_set_align(aidogui_ui.menu.MenuTitle, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.MenuTitle, 34);
-    lv_obj_set_y(aidogui_ui.menu.MenuTitle, 2);
+    lv_obj_set_y(aidogui_ui.menu.MenuTitle, 0);
     lv_label_set_text(aidogui_ui.menu.MenuTitle, "菜单");
     lv_obj_set_style_text_font(aidogui_ui.menu.MenuTitle, &ui_font_ai_ai_font_a2b93e6c2db05d6bbbf6f27d_otf_16, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(aidogui_ui.menu.MenuTitle, lv_color_hex(0xD7E8EB), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -180,7 +180,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_height(aidogui_ui.menu.MenuSensor, 60);
     lv_obj_set_align(aidogui_ui.menu.MenuSensor, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.MenuSensor, 16);
-    lv_obj_set_y(aidogui_ui.menu.MenuSensor, 92);
+    lv_obj_set_y(aidogui_ui.menu.MenuSensor, 62);
     lv_obj_remove_flag(aidogui_ui.menu.MenuSensor, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_text_font(aidogui_ui.menu.MenuSensor, &ui_font__aidogui_default_alibaba__16, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(aidogui_ui.menu.MenuSensor, lv_color_hex(0x081217), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -233,7 +233,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_height(aidogui_ui.menu.MenuNetwork, 60);
     lv_obj_set_align(aidogui_ui.menu.MenuNetwork, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.MenuNetwork, 88);
-    lv_obj_set_y(aidogui_ui.menu.MenuNetwork, 92);
+    lv_obj_set_y(aidogui_ui.menu.MenuNetwork, 62);
     lv_obj_remove_flag(aidogui_ui.menu.MenuNetwork, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_text_font(aidogui_ui.menu.MenuNetwork, &ui_font__aidogui_default_alibaba__16, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(aidogui_ui.menu.MenuNetwork, lv_color_hex(0x081217), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -286,7 +286,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_height(aidogui_ui.menu.MenuBle, 60);
     lv_obj_set_align(aidogui_ui.menu.MenuBle, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.MenuBle, 160);
-    lv_obj_set_y(aidogui_ui.menu.MenuBle, 92);
+    lv_obj_set_y(aidogui_ui.menu.MenuBle, 62);
     lv_obj_remove_flag(aidogui_ui.menu.MenuBle, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_text_font(aidogui_ui.menu.MenuBle, &ui_font__aidogui_default_alibaba__16, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(aidogui_ui.menu.MenuBle, lv_color_hex(0x081217), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -339,7 +339,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_height(aidogui_ui.menu.MenuAudio, 60);
     lv_obj_set_align(aidogui_ui.menu.MenuAudio, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.MenuAudio, 16);
-    lv_obj_set_y(aidogui_ui.menu.MenuAudio, 162);
+    lv_obj_set_y(aidogui_ui.menu.MenuAudio, 138);
     lv_obj_remove_flag(aidogui_ui.menu.MenuAudio, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_text_font(aidogui_ui.menu.MenuAudio, &ui_font__aidogui_default_alibaba__16, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(aidogui_ui.menu.MenuAudio, lv_color_hex(0x081217), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -392,7 +392,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_height(aidogui_ui.menu.MenuDisplay, 60);
     lv_obj_set_align(aidogui_ui.menu.MenuDisplay, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.MenuDisplay, 88);
-    lv_obj_set_y(aidogui_ui.menu.MenuDisplay, 162);
+    lv_obj_set_y(aidogui_ui.menu.MenuDisplay, 138);
     lv_obj_remove_flag(aidogui_ui.menu.MenuDisplay, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_text_font(aidogui_ui.menu.MenuDisplay, &ui_font__aidogui_default_alibaba__16, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(aidogui_ui.menu.MenuDisplay, lv_color_hex(0x081217), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -445,7 +445,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_height(aidogui_ui.menu.MenuSystem, 60);
     lv_obj_set_align(aidogui_ui.menu.MenuSystem, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.MenuSystem, 160);
-    lv_obj_set_y(aidogui_ui.menu.MenuSystem, 162);
+    lv_obj_set_y(aidogui_ui.menu.MenuSystem, 138);
     lv_obj_remove_flag(aidogui_ui.menu.MenuSystem, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_text_font(aidogui_ui.menu.MenuSystem, &ui_font__aidogui_default_alibaba__16, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(aidogui_ui.menu.MenuSystem, lv_color_hex(0x081217), LV_PART_MAIN | LV_STATE_DEFAULT);
