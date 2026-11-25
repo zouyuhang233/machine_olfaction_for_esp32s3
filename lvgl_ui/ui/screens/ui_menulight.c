@@ -177,7 +177,7 @@ void ui_menulight_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menulight.MenuTitle, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menulight.LightSensor = lv_obj_create(aidogui_ui.menulight.MenuLightStage);
     lv_obj_set_width(aidogui_ui.menulight.LightSensor, 64);
-    lv_obj_set_height(aidogui_ui.menulight.LightSensor, 60);
+    lv_obj_set_height(aidogui_ui.menulight.LightSensor, 66);
     lv_obj_set_align(aidogui_ui.menulight.LightSensor, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menulight.LightSensor, 16);
     lv_obj_set_y(aidogui_ui.menulight.LightSensor, 62);
@@ -219,7 +219,7 @@ void ui_menulight_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menulight.LightSensorText, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menulight.SensorHit = lv_button_create(aidogui_ui.menulight.LightSensor);
     lv_obj_set_width(aidogui_ui.menulight.SensorHit, 64);
-    lv_obj_set_height(aidogui_ui.menulight.SensorHit, 60);
+    lv_obj_set_height(aidogui_ui.menulight.SensorHit, 66);
     lv_obj_set_align(aidogui_ui.menulight.SensorHit, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menulight.SensorHit, 0);
     lv_obj_set_y(aidogui_ui.menulight.SensorHit, 0);
@@ -230,7 +230,7 @@ void ui_menulight_screen_init(void)
     lv_obj_set_style_radius(aidogui_ui.menulight.SensorHit, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menulight.LightNetwork = lv_obj_create(aidogui_ui.menulight.MenuLightStage);
     lv_obj_set_width(aidogui_ui.menulight.LightNetwork, 64);
-    lv_obj_set_height(aidogui_ui.menulight.LightNetwork, 60);
+    lv_obj_set_height(aidogui_ui.menulight.LightNetwork, 66);
     lv_obj_set_align(aidogui_ui.menulight.LightNetwork, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menulight.LightNetwork, 88);
     lv_obj_set_y(aidogui_ui.menulight.LightNetwork, 62);
@@ -272,7 +272,7 @@ void ui_menulight_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menulight.LightNetworkText, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menulight.NetworkHit = lv_button_create(aidogui_ui.menulight.LightNetwork);
     lv_obj_set_width(aidogui_ui.menulight.NetworkHit, 64);
-    lv_obj_set_height(aidogui_ui.menulight.NetworkHit, 60);
+    lv_obj_set_height(aidogui_ui.menulight.NetworkHit, 66);
     lv_obj_set_align(aidogui_ui.menulight.NetworkHit, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menulight.NetworkHit, 0);
     lv_obj_set_y(aidogui_ui.menulight.NetworkHit, 0);
@@ -283,7 +283,7 @@ void ui_menulight_screen_init(void)
     lv_obj_set_style_radius(aidogui_ui.menulight.NetworkHit, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menulight.LightBle = lv_obj_create(aidogui_ui.menulight.MenuLightStage);
     lv_obj_set_width(aidogui_ui.menulight.LightBle, 64);
-    lv_obj_set_height(aidogui_ui.menulight.LightBle, 60);
+    lv_obj_set_height(aidogui_ui.menulight.LightBle, 66);
     lv_obj_set_align(aidogui_ui.menulight.LightBle, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menulight.LightBle, 160);
     lv_obj_set_y(aidogui_ui.menulight.LightBle, 62);
@@ -325,7 +325,7 @@ void ui_menulight_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menulight.LightBleText, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menulight.BleHit = lv_button_create(aidogui_ui.menulight.LightBle);
     lv_obj_set_width(aidogui_ui.menulight.BleHit, 64);
-    lv_obj_set_height(aidogui_ui.menulight.BleHit, 60);
+    lv_obj_set_height(aidogui_ui.menulight.BleHit, 66);
     lv_obj_set_align(aidogui_ui.menulight.BleHit, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menulight.BleHit, 0);
     lv_obj_set_y(aidogui_ui.menulight.BleHit, 0);
@@ -336,7 +336,7 @@ void ui_menulight_screen_init(void)
     lv_obj_set_style_radius(aidogui_ui.menulight.BleHit, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menulight.LightAudio = lv_obj_create(aidogui_ui.menulight.MenuLightStage);
     lv_obj_set_width(aidogui_ui.menulight.LightAudio, 64);
-    lv_obj_set_height(aidogui_ui.menulight.LightAudio, 60);
+    lv_obj_set_height(aidogui_ui.menulight.LightAudio, 66);
     lv_obj_set_align(aidogui_ui.menulight.LightAudio, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menulight.LightAudio, 16);
     lv_obj_set_y(aidogui_ui.menulight.LightAudio, 138);
@@ -378,7 +378,7 @@ void ui_menulight_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menulight.LightAudioText, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menulight.AudioHit = lv_button_create(aidogui_ui.menulight.LightAudio);
     lv_obj_set_width(aidogui_ui.menulight.AudioHit, 64);
-    lv_obj_set_height(aidogui_ui.menulight.AudioHit, 60);
+    lv_obj_set_height(aidogui_ui.menulight.AudioHit, 66);
     lv_obj_set_align(aidogui_ui.menulight.AudioHit, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menulight.AudioHit, 0);
     lv_obj_set_y(aidogui_ui.menulight.AudioHit, 0);
@@ -389,7 +389,7 @@ void ui_menulight_screen_init(void)
     lv_obj_set_style_radius(aidogui_ui.menulight.AudioHit, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menulight.LightDisplay = lv_obj_create(aidogui_ui.menulight.MenuLightStage);
     lv_obj_set_width(aidogui_ui.menulight.LightDisplay, 64);
-    lv_obj_set_height(aidogui_ui.menulight.LightDisplay, 60);
+    lv_obj_set_height(aidogui_ui.menulight.LightDisplay, 66);
     lv_obj_set_align(aidogui_ui.menulight.LightDisplay, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menulight.LightDisplay, 88);
     lv_obj_set_y(aidogui_ui.menulight.LightDisplay, 138);
@@ -431,7 +431,7 @@ void ui_menulight_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menulight.LightDisplayText, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menulight.DisplayHit = lv_button_create(aidogui_ui.menulight.LightDisplay);
     lv_obj_set_width(aidogui_ui.menulight.DisplayHit, 64);
-    lv_obj_set_height(aidogui_ui.menulight.DisplayHit, 60);
+    lv_obj_set_height(aidogui_ui.menulight.DisplayHit, 66);
     lv_obj_set_align(aidogui_ui.menulight.DisplayHit, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menulight.DisplayHit, 0);
     lv_obj_set_y(aidogui_ui.menulight.DisplayHit, 0);
@@ -442,7 +442,7 @@ void ui_menulight_screen_init(void)
     lv_obj_set_style_radius(aidogui_ui.menulight.DisplayHit, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menulight.LightSystem = lv_obj_create(aidogui_ui.menulight.MenuLightStage);
     lv_obj_set_width(aidogui_ui.menulight.LightSystem, 64);
-    lv_obj_set_height(aidogui_ui.menulight.LightSystem, 60);
+    lv_obj_set_height(aidogui_ui.menulight.LightSystem, 66);
     lv_obj_set_align(aidogui_ui.menulight.LightSystem, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menulight.LightSystem, 160);
     lv_obj_set_y(aidogui_ui.menulight.LightSystem, 138);
@@ -484,7 +484,7 @@ void ui_menulight_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menulight.LightSystemText, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menulight.SystemHit = lv_button_create(aidogui_ui.menulight.LightSystem);
     lv_obj_set_width(aidogui_ui.menulight.SystemHit, 64);
-    lv_obj_set_height(aidogui_ui.menulight.SystemHit, 60);
+    lv_obj_set_height(aidogui_ui.menulight.SystemHit, 66);
     lv_obj_set_align(aidogui_ui.menulight.SystemHit, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menulight.SystemHit, 0);
     lv_obj_set_y(aidogui_ui.menulight.SystemHit, 0);

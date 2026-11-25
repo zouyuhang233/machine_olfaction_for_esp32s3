@@ -177,7 +177,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menu.MenuTitle, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menu.MenuSensor = lv_obj_create(aidogui_ui.menu.MenuStage);
     lv_obj_set_width(aidogui_ui.menu.MenuSensor, 64);
-    lv_obj_set_height(aidogui_ui.menu.MenuSensor, 60);
+    lv_obj_set_height(aidogui_ui.menu.MenuSensor, 66);
     lv_obj_set_align(aidogui_ui.menu.MenuSensor, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.MenuSensor, 16);
     lv_obj_set_y(aidogui_ui.menu.MenuSensor, 62);
@@ -219,7 +219,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menu.MenuSensorText, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menu.SensorHit = lv_button_create(aidogui_ui.menu.MenuSensor);
     lv_obj_set_width(aidogui_ui.menu.SensorHit, 64);
-    lv_obj_set_height(aidogui_ui.menu.SensorHit, 60);
+    lv_obj_set_height(aidogui_ui.menu.SensorHit, 66);
     lv_obj_set_align(aidogui_ui.menu.SensorHit, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.SensorHit, 0);
     lv_obj_set_y(aidogui_ui.menu.SensorHit, 0);
@@ -230,7 +230,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_style_radius(aidogui_ui.menu.SensorHit, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menu.MenuNetwork = lv_obj_create(aidogui_ui.menu.MenuStage);
     lv_obj_set_width(aidogui_ui.menu.MenuNetwork, 64);
-    lv_obj_set_height(aidogui_ui.menu.MenuNetwork, 60);
+    lv_obj_set_height(aidogui_ui.menu.MenuNetwork, 66);
     lv_obj_set_align(aidogui_ui.menu.MenuNetwork, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.MenuNetwork, 88);
     lv_obj_set_y(aidogui_ui.menu.MenuNetwork, 62);
@@ -272,7 +272,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menu.MenuNetworkText, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menu.NetworkHit = lv_button_create(aidogui_ui.menu.MenuNetwork);
     lv_obj_set_width(aidogui_ui.menu.NetworkHit, 64);
-    lv_obj_set_height(aidogui_ui.menu.NetworkHit, 60);
+    lv_obj_set_height(aidogui_ui.menu.NetworkHit, 66);
     lv_obj_set_align(aidogui_ui.menu.NetworkHit, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.NetworkHit, 0);
     lv_obj_set_y(aidogui_ui.menu.NetworkHit, 0);
@@ -283,7 +283,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_style_radius(aidogui_ui.menu.NetworkHit, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menu.MenuBle = lv_obj_create(aidogui_ui.menu.MenuStage);
     lv_obj_set_width(aidogui_ui.menu.MenuBle, 64);
-    lv_obj_set_height(aidogui_ui.menu.MenuBle, 60);
+    lv_obj_set_height(aidogui_ui.menu.MenuBle, 66);
     lv_obj_set_align(aidogui_ui.menu.MenuBle, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.MenuBle, 160);
     lv_obj_set_y(aidogui_ui.menu.MenuBle, 62);
@@ -325,7 +325,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menu.MenuBleText, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menu.BleHit = lv_button_create(aidogui_ui.menu.MenuBle);
     lv_obj_set_width(aidogui_ui.menu.BleHit, 64);
-    lv_obj_set_height(aidogui_ui.menu.BleHit, 60);
+    lv_obj_set_height(aidogui_ui.menu.BleHit, 66);
     lv_obj_set_align(aidogui_ui.menu.BleHit, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.BleHit, 0);
     lv_obj_set_y(aidogui_ui.menu.BleHit, 0);
@@ -336,7 +336,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_style_radius(aidogui_ui.menu.BleHit, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menu.MenuAudio = lv_obj_create(aidogui_ui.menu.MenuStage);
     lv_obj_set_width(aidogui_ui.menu.MenuAudio, 64);
-    lv_obj_set_height(aidogui_ui.menu.MenuAudio, 60);
+    lv_obj_set_height(aidogui_ui.menu.MenuAudio, 66);
     lv_obj_set_align(aidogui_ui.menu.MenuAudio, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.MenuAudio, 16);
     lv_obj_set_y(aidogui_ui.menu.MenuAudio, 138);
@@ -378,7 +378,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menu.MenuAudioText, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menu.AudioHit = lv_button_create(aidogui_ui.menu.MenuAudio);
     lv_obj_set_width(aidogui_ui.menu.AudioHit, 64);
-    lv_obj_set_height(aidogui_ui.menu.AudioHit, 60);
+    lv_obj_set_height(aidogui_ui.menu.AudioHit, 66);
     lv_obj_set_align(aidogui_ui.menu.AudioHit, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.AudioHit, 0);
     lv_obj_set_y(aidogui_ui.menu.AudioHit, 0);
@@ -389,7 +389,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_style_radius(aidogui_ui.menu.AudioHit, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menu.MenuDisplay = lv_obj_create(aidogui_ui.menu.MenuStage);
     lv_obj_set_width(aidogui_ui.menu.MenuDisplay, 64);
-    lv_obj_set_height(aidogui_ui.menu.MenuDisplay, 60);
+    lv_obj_set_height(aidogui_ui.menu.MenuDisplay, 66);
     lv_obj_set_align(aidogui_ui.menu.MenuDisplay, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.MenuDisplay, 88);
     lv_obj_set_y(aidogui_ui.menu.MenuDisplay, 138);
@@ -431,7 +431,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menu.MenuDisplayText, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menu.DisplayHit = lv_button_create(aidogui_ui.menu.MenuDisplay);
     lv_obj_set_width(aidogui_ui.menu.DisplayHit, 64);
-    lv_obj_set_height(aidogui_ui.menu.DisplayHit, 60);
+    lv_obj_set_height(aidogui_ui.menu.DisplayHit, 66);
     lv_obj_set_align(aidogui_ui.menu.DisplayHit, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.DisplayHit, 0);
     lv_obj_set_y(aidogui_ui.menu.DisplayHit, 0);
@@ -442,7 +442,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_style_radius(aidogui_ui.menu.DisplayHit, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menu.MenuSystem = lv_obj_create(aidogui_ui.menu.MenuStage);
     lv_obj_set_width(aidogui_ui.menu.MenuSystem, 64);
-    lv_obj_set_height(aidogui_ui.menu.MenuSystem, 60);
+    lv_obj_set_height(aidogui_ui.menu.MenuSystem, 66);
     lv_obj_set_align(aidogui_ui.menu.MenuSystem, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.MenuSystem, 160);
     lv_obj_set_y(aidogui_ui.menu.MenuSystem, 138);
@@ -484,7 +484,7 @@ void ui_menu_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menu.MenuSystemText, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menu.SystemHit = lv_button_create(aidogui_ui.menu.MenuSystem);
     lv_obj_set_width(aidogui_ui.menu.SystemHit, 64);
-    lv_obj_set_height(aidogui_ui.menu.SystemHit, 60);
+    lv_obj_set_height(aidogui_ui.menu.SystemHit, 66);
     lv_obj_set_align(aidogui_ui.menu.SystemHit, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.SystemHit, 0);
     lv_obj_set_y(aidogui_ui.menu.SystemHit, 0);
