@@ -23,7 +23,7 @@ static const char *TAG = "app_ui";
 #define UI_WIDTH 240
 #define UI_HEIGHT 240
 #define FOCUS_ANIM_MS 120
-#define SCREEN_LOCK_MS 360
+#define SCREEN_LOCK_MS 180
 
 typedef enum {
     SCR_NONE = 0,
@@ -181,6 +181,7 @@ static int focus_count_for(ui_screen_id_t id)
 {
     switch (id) {
     case SCR_HOME:
+        return 0;
     case SCR_RESULT:
         return 1;
     case SCR_MENU_DARK:
@@ -1616,7 +1617,7 @@ esp_err_t app_ui_init(void)
     sync_screen();
     show_toast("方向键选择  确认 / 返回");
 
-    s_input_timer = lv_timer_create(input_timer_cb, 10, NULL);
+    s_input_timer = lv_timer_create(input_timer_cb, 8, NULL);
     s_value_timer = lv_timer_create(value_timer_cb, 500, NULL);
     if (s_input_timer == NULL || s_value_timer == NULL) {
         ESP_LOGE(TAG, "UI 定时器创建失败");

@@ -7,9 +7,9 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 
-#define DEBOUNCE_US        20000
-#define REPEAT_DELAY_US    420000
-#define REPEAT_PERIOD_US    90000
+#define DEBOUNCE_US        12000
+#define REPEAT_DELAY_US    300000
+#define REPEAT_PERIOD_US    70000
 
 static const char *TAG = "buttons";
 
