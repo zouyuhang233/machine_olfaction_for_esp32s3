@@ -101,6 +101,8 @@ static lv_chart_series_t *s_monitor_rs_series;
 static lv_obj_t *s_monitor_values1;
 static lv_obj_t *s_monitor_values2;
 static lv_obj_t *s_monitor_values3;
+static lv_obj_t *s_monitor_axis_top;
+static int s_monitor_axis_max = 100;
 static uint32_t s_monitor_last_sample_count;
 static bool s_monitor_has_sample;
 static lv_obj_t *s_monitor_status_wifi;
@@ -539,13 +541,13 @@ static void monitor_screen_init(void)
     lv_obj_set_style_text_font(legend, &ui_font_prompt_cn_12, 0);
     lv_obj_set_style_text_color(legend, lv_color_hex(0xFBBF24), 0);
 
-    lv_obj_t *axis_100 = lv_label_create(panel);
-    lv_obj_set_size(axis_100, 22, 14);
-    lv_obj_set_pos(axis_100, 0, 16);
-    lv_obj_set_style_text_align(axis_100, LV_TEXT_ALIGN_RIGHT, 0);
-    lv_label_set_text(axis_100, "100");
-    lv_obj_set_style_text_font(axis_100, &ui_font_prompt_cn_12, 0);
-    lv_obj_set_style_text_color(axis_100, lv_color_hex(0x607780), 0);
+    s_monitor_axis_top = lv_label_create(panel);
+    lv_obj_set_size(s_monitor_axis_top, 28, 14);
+    lv_obj_set_pos(s_monitor_axis_top, 0, 16);
+    lv_obj_set_style_text_align(s_monitor_axis_top, LV_TEXT_ALIGN_RIGHT, 0);
+    lv_label_set_text(s_monitor_axis_top, "100");
+    lv_obj_set_style_text_font(s_monitor_axis_top, &ui_font_prompt_cn_12, 0);
+    lv_obj_set_style_text_color(s_monitor_axis_top, lv_color_hex(0x607780), 0);
 
     lv_obj_t *axis_0 = lv_label_create(panel);
     lv_obj_set_size(axis_0, 22, 14);
@@ -1484,23 +1486,34 @@ static void refresh_result(void)
     }
 }
 
-static int monitor_norm(float value, float min_value, float max_value)
-{
-    if (!isfinite(value) || max_value <= min_value) return 0;
-    float normalized = (value - min_value) * 100.0f / (max_value - min_value);
-    if (normalized < 0.0f) normalized = 0.0f;
-    if (normalized > 100.0f) normalized = 100.0f;
-    return (int)(normalized + 0.5f);
-}
-
 static void refresh_monitor(void)
 {
     sensor_data_t d;
     sensor_get(&d);
 
-    int rs_value = monitor_norm(d.gas_valid ? d.rs : NAN, 0.0f, 100.0f);
+    bool rs_valid = d.gas_valid && isfinite(d.rs);
+    int rs_value = rs_valid ? (int)(d.rs + 0.5f) : 0;
+    int axis_max = 10;
+    if (rs_value > 10) axis_max = 20;
+    if (rs_value > 20) axis_max = 50;
+    if (rs_value > 50) axis_max = 100;
+    if (rs_value > 100) axis_max = 200;
+    if (rs_value > 200) axis_max = 500;
+    if (rs_value > 500) axis_max = 1000;
+    if (axis_max != s_monitor_axis_max) {
+        s_monitor_axis_max = axis_max;
+        if (object_ok(s_monitor_chart)) {
+            lv_chart_set_axis_range(s_monitor_chart, LV_CHART_AXIS_PRIMARY_Y, 0, axis_max);
+        }
+        if (object_ok(s_monitor_axis_top)) {
+            char axis_text[12];
+            snprintf(axis_text, sizeof(axis_text), "%d", axis_max);
+            set_label_text(s_monitor_axis_top, axis_text);
+        }
+    }
     if (object_ok(s_monitor_chart) &&
         (!s_monitor_has_sample || d.sample_count != s_monitor_last_sample_count)) {
+        if (rs_value > s_monitor_axis_max) rs_value = s_monitor_axis_max;
         lv_chart_set_next_value(s_monitor_chart, s_monitor_rs_series, rs_value);
         s_monitor_last_sample_count = d.sample_count;
         s_monitor_has_sample = true;
