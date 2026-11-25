@@ -12,6 +12,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
+#include "nvs.h"
 #include "settings_store.h"
 
 static const char *TAG = "services";
@@ -27,6 +28,101 @@ typedef struct {
 
 static sensor_cache_t s_sensor_cache;
 static SemaphoreHandle_t s_sensor_lock;
+
+#define HISTORY_MAGIC 0x48495354U
+#define HISTORY_NVS_NAMESPACE "olf_history"
+#define HISTORY_NVS_KEY "records"
+
+typedef struct {
+    uint32_t magic;
+    uint16_t head;
+    uint16_t count;
+    uint32_t next_sequence;
+    history_record_t records[HISTORY_MAX_RECORDS];
+} history_blob_t;
+
+static history_blob_t s_history;
+static SemaphoreHandle_t s_history_lock;
+static nvs_handle_t s_history_nvs;
+static bool s_history_nvs_open;
+
+static void history_save(void)
+{
+    if (!s_history_nvs_open) return;
+    nvs_set_blob(s_history_nvs, HISTORY_NVS_KEY, &s_history, sizeof(s_history));
+    nvs_commit(s_history_nvs);
+}
+
+static void history_init(void)
+{
+    s_history_lock = xSemaphoreCreateMutex();
+    memset(&s_history, 0, sizeof(s_history));
+    s_history.magic = HISTORY_MAGIC;
+
+    esp_err_t err = nvs_open(HISTORY_NVS_NAMESPACE, NVS_READWRITE, &s_history_nvs);
+    if (err == ESP_OK) {
+        s_history_nvs_open = true;
+        size_t length = sizeof(s_history);
+        history_blob_t stored;
+        if (nvs_get_blob(s_history_nvs, HISTORY_NVS_KEY, &stored, &length) == ESP_OK &&
+            length == sizeof(stored) && stored.magic == HISTORY_MAGIC &&
+            stored.count <= HISTORY_MAX_RECORDS && stored.head < HISTORY_MAX_RECORDS) {
+            s_history = stored;
+        }
+    } else {
+        ESP_LOGW(TAG, "历史记录 NVS 打开失败: %s", esp_err_to_name(err));
+    }
+    ESP_LOGI(TAG, "历史记录已加载: %u 条", (unsigned)s_history.count);
+}
+
+bool history_capture_current(void)
+{
+    sensor_data_t d;
+    sensor_get(&d);
+    if (s_history_lock == NULL) return false;
+
+    if (xSemaphoreTake(s_history_lock, pdMS_TO_TICKS(200)) != pdTRUE) return false;
+    history_record_t *rec = &s_history.records[s_history.head];
+    memset(rec, 0, sizeof(*rec));
+    rec->sequence = ++s_history.next_sequence;
+    uint32_t sequence = rec->sequence;
+    rec->temp_c = d.temp;
+    rec->humi_pct = d.humi;
+    rec->pressure_hpa = d.press;
+    rec->rs_kohm = d.rs;
+    rec->valid = d.valid;
+    rec->gas_valid = d.gas_valid;
+    s_history.head = (uint16_t)((s_history.head + 1U) % HISTORY_MAX_RECORDS);
+    if (s_history.count < HISTORY_MAX_RECORDS) s_history.count++;
+    history_save();
+    uint16_t count = s_history.count;
+    xSemaphoreGive(s_history_lock);
+    ESP_LOGI(TAG, "历史记录新增: #%lu，共 %u 条",
+             (unsigned long)sequence, (unsigned)count);
+    return true;
+}
+
+int history_count(void)
+{
+    if (s_history_lock == NULL) return 0;
+    if (xSemaphoreTake(s_history_lock, pdMS_TO_TICKS(100)) != pdTRUE) return 0;
+    int count = s_history.count;
+    xSemaphoreGive(s_history_lock);
+    return count;
+}
+
+bool history_get(int newest_index, history_record_t *out)
+{
+    if (out == NULL || newest_index < 0 || s_history_lock == NULL) return false;
+    if (xSemaphoreTake(s_history_lock, pdMS_TO_TICKS(100)) != pdTRUE) return false;
+    bool ok = newest_index < s_history.count;
+    if (ok) {
+        uint16_t pos = (uint16_t)((s_history.head + HISTORY_MAX_RECORDS - 1U - (uint16_t)newest_index) % HISTORY_MAX_RECORDS);
+        *out = s_history.records[pos];
+    }
+    xSemaphoreGive(s_history_lock);
+    return ok;
+}
 
 static void sensor_cache_reset(void)
 {
@@ -166,6 +262,7 @@ void services_init(void)
 {
     sensor_cache_reset();
     s_sensor_lock = xSemaphoreCreateMutex();
+    history_init();
 
     if (s_sensor_lock == NULL) {
         ESP_LOGE(TAG, "传感器缓存互斥锁创建失败");

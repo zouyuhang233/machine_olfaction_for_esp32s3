@@ -93,6 +93,13 @@ static lv_obj_t *s_confirm_labels[2];
 static lv_timer_t *s_input_timer;
 static lv_timer_t *s_value_timer;
 
+static lv_obj_t *s_history_button_dark;
+static lv_obj_t *s_history_button_light;
+static lv_obj_t *s_history_overlay;
+static lv_obj_t *s_history_counter;
+static lv_obj_t *s_history_detail;
+static int s_history_index;
+
 #ifndef APP_UI_SELF_TEST
 #define APP_UI_SELF_TEST 0
 #endif
@@ -186,7 +193,7 @@ static int focus_count_for(ui_screen_id_t id)
         return 1;
     case SCR_MENU_DARK:
     case SCR_MENU_LIGHT:
-        return 6;
+        return 7;
     case SCR_NETWORK_DARK:
     case SCR_NETWORK_LIGHT:
     case SCR_BLE_DARK:
@@ -212,6 +219,35 @@ static int default_focus_for(ui_screen_id_t id)
     return 0;
 }
 
+static lv_obj_t *menu_history_ensure(ui_screen_id_t id)
+{
+    bool light = id == SCR_MENU_LIGHT;
+    lv_obj_t **slot = light ? &s_history_button_light : &s_history_button_dark;
+    if (object_ok(*slot)) return *slot;
+
+    lv_obj_t *parent = light ? aidogui_ui.menulight.MenuLightStage : aidogui_ui.menu.MenuStage;
+    if (!object_ok(parent)) return NULL;
+
+    lv_obj_t *button = lv_obj_create(parent);
+    lv_obj_remove_style_all(button);
+    lv_obj_set_size(button, 208, 24);
+    lv_obj_set_pos(button, 16, 204);
+    lv_obj_remove_flag(button, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(button, light ? lv_color_hex(0xFFFFFF) : lv_color_hex(0x081217), 0);
+    lv_obj_set_style_bg_opa(button, LV_OPA_COVER, 0);
+    lv_obj_set_style_radius(button, 8, 0);
+    lv_obj_set_style_border_width(button, 1, 0);
+    lv_obj_set_style_border_color(button, light ? lv_color_hex(0xB8CCC7) : lv_color_hex(0x17323A), 0);
+
+    lv_obj_t *label = lv_label_create(button);
+    lv_label_set_text(label, "历史检测记录");
+    lv_obj_set_style_text_font(label, &ui_font_prompt_cn_16, 0);
+    lv_obj_set_style_text_color(label, light ? lv_color_hex(0x17373D) : lv_color_hex(0xD7E8EB), 0);
+    lv_obj_center(label);
+    *slot = button;
+    return button;
+}
+
 static lv_obj_t *focus_target_for(ui_screen_id_t id, int index)
 {
     switch (id) {
@@ -225,6 +261,7 @@ static lv_obj_t *focus_target_for(ui_screen_id_t id, int index)
         case 3: return aidogui_ui.menu.MenuAudio;
         case 4: return aidogui_ui.menu.MenuDisplay;
         case 5: return aidogui_ui.menu.MenuSystem;
+        case 6: return menu_history_ensure(id);
         default: return NULL;
         }
     case SCR_MENU_LIGHT:
@@ -235,6 +272,7 @@ static lv_obj_t *focus_target_for(ui_screen_id_t id, int index)
         case 3: return aidogui_ui.menulight.LightAudio;
         case 4: return aidogui_ui.menulight.LightDisplay;
         case 5: return aidogui_ui.menulight.LightSystem;
+        case 6: return menu_history_ensure(id);
         default: return NULL;
         }
     case SCR_NETWORK_DARK: return aidogui_ui.networkdark.WifiRow;
@@ -382,6 +420,7 @@ static void prepare_screen_for_display(ui_screen_id_t id)
 
     if (lv_obj_get_parent(stage) != root) return;
 
+    if (id == SCR_MENU_DARK || id == SCR_MENU_LIGHT) menu_history_ensure(id);
     lv_obj_set_size(stage, UI_WIDTH, UI_HEIGHT);
     lv_obj_set_pos(stage, 0, 0);
     lv_obj_update_layout(root);
@@ -806,6 +845,119 @@ static void open_confirm(confirm_mode_t mode)
     lv_obj_fade_in(s_confirm_overlay, 120, 0);
 }
 
+static void history_overlay_update(void)
+{
+    int count = history_count();
+    if (count <= 0) {
+        s_history_index = 0;
+        set_label_text(s_history_counter, "暂无检测记录");
+        set_label_text(s_history_detail, "完成一次检测后\n自动保存传感器数据");
+        return;
+    }
+    if (s_history_index < 0) s_history_index = count - 1;
+    if (s_history_index >= count) s_history_index = 0;
+
+    history_record_t rec;
+    if (!history_get(s_history_index, &rec)) return;
+
+    char counter[64];
+    char temp[24], humi[24], press[24], rs[24];
+    snprintf(counter, sizeof(counter), "记录  %d / %d", s_history_index + 1, count);
+    if (rec.valid && isfinite(rec.temp_c)) snprintf(temp, sizeof(temp), "温度  %.1f°C", rec.temp_c);
+    else snprintf(temp, sizeof(temp), "温度  --");
+    if (rec.valid && isfinite(rec.humi_pct)) snprintf(humi, sizeof(humi), "湿度  %.0f%%", rec.humi_pct);
+    else snprintf(humi, sizeof(humi), "湿度  --");
+    if (rec.valid && isfinite(rec.pressure_hpa)) snprintf(press, sizeof(press), "气压  %.0f hPa", rec.pressure_hpa);
+    else snprintf(press, sizeof(press), "气压  --");
+    if (rec.gas_valid && isfinite(rec.rs_kohm)) snprintf(rs, sizeof(rs), "气阻  %.1f kΩ", rec.rs_kohm);
+    else snprintf(rs, sizeof(rs), "气阻  --");
+
+    char detail[256];
+    snprintf(detail, sizeof(detail), "序号  #%lu\n%s\n%s\n%s\n%s\n结果  待检测",
+             (unsigned long)rec.sequence, temp, humi, press, rs);
+    set_label_text(s_history_counter, counter);
+    set_label_text(s_history_detail, detail);
+}
+
+static void close_history_overlay(void)
+{
+    if (object_ok(s_history_overlay)) lv_obj_del(s_history_overlay);
+    s_history_overlay = NULL;
+    s_history_counter = NULL;
+    s_history_detail = NULL;
+    focus_update(true);
+}
+
+static void open_history_overlay(void)
+{
+    if (object_ok(s_history_overlay)) return;
+    toast_delete();
+    focus_ring_hide();
+    s_history_index = 0;
+
+    s_history_overlay = lv_obj_create(lv_layer_top());
+    lv_obj_remove_style_all(s_history_overlay);
+    lv_obj_set_size(s_history_overlay, UI_WIDTH, UI_HEIGHT);
+    lv_obj_set_pos(s_history_overlay, 0, 0);
+    lv_obj_remove_flag(s_history_overlay, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(s_history_overlay, lv_color_hex(0x05080C), 0);
+    lv_obj_set_style_bg_opa(s_history_overlay, LV_OPA_COVER, 0);
+
+    lv_obj_t *title = lv_label_create(s_history_overlay);
+    lv_label_set_text(title, "历史检测记录");
+    lv_obj_set_style_text_font(title, &ui_font_prompt_cn_20, 0);
+    lv_obj_set_style_text_color(title, lv_color_hex(0xD7E8EB), 0);
+    lv_obj_align(title, LV_ALIGN_TOP_LEFT, 16, 8);
+
+    lv_obj_t *panel = lv_obj_create(s_history_overlay);
+    lv_obj_remove_style_all(panel);
+    lv_obj_set_size(panel, 208, 158);
+    lv_obj_align(panel, LV_ALIGN_TOP_MID, 0, 42);
+    lv_obj_remove_flag(panel, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(panel, lv_color_hex(0x081217), 0);
+    lv_obj_set_style_bg_opa(panel, LV_OPA_COVER, 0);
+    lv_obj_set_style_radius(panel, 8, 0);
+    lv_obj_set_style_border_width(panel, 1, 0);
+    lv_obj_set_style_border_color(panel, lv_color_hex(0x17323A), 0);
+
+    s_history_counter = lv_label_create(panel);
+    lv_obj_set_style_text_font(s_history_counter, &ui_font_prompt_cn_16, 0);
+    lv_obj_set_style_text_color(s_history_counter, lv_color_hex(0x55F2B6), 0);
+    lv_obj_align(s_history_counter, LV_ALIGN_TOP_LEFT, 12, 8);
+
+    s_history_detail = lv_label_create(panel);
+    lv_obj_set_width(s_history_detail, 184);
+    lv_obj_set_style_text_font(s_history_detail, &ui_font_prompt_cn_16, 0);
+    lv_obj_set_style_text_color(s_history_detail, lv_color_hex(0xD7E8EB), 0);
+    lv_obj_set_style_text_line_space(s_history_detail, 3, 0);
+    lv_obj_align(s_history_detail, LV_ALIGN_TOP_LEFT, 12, 36);
+
+    lv_obj_t *hint = lv_label_create(s_history_overlay);
+    lv_label_set_text(hint, "左右翻记录  返回关闭");
+    lv_obj_set_style_text_font(hint, &ui_font_prompt_cn_14, 0);
+    lv_obj_set_style_text_color(hint, lv_color_hex(0x91AAB0), 0);
+    lv_obj_align(hint, LV_ALIGN_BOTTOM_MID, 0, -8);
+
+    history_overlay_update();
+    lv_obj_set_style_opa(s_history_overlay, LV_OPA_TRANSP, 0);
+    lv_obj_fade_in(s_history_overlay, 140, 0);
+}
+
+static void handle_history_key(button_id_t key, bool repeat)
+{
+    (void)repeat;
+    int count = history_count();
+    if (key == BTN_LEFT && count > 0) {
+        s_history_index--;
+        history_overlay_update();
+    } else if (key == BTN_RIGHT && count > 0) {
+        s_history_index++;
+        history_overlay_update();
+    } else if (key == BTN_BACK || key == BTN_OK) {
+        close_history_overlay();
+    }
+}
+
 static void navigate_home(void)
 {
     finish_edit_mode(true);
@@ -895,6 +1047,7 @@ static void cancel_measure_timer(void)
 static void show_result(void)
 {
     cancel_measure_timer();
+    history_capture_current();
     init_screen_for(SCR_RESULT);
     prepare_screen_for_display(SCR_RESULT);
     _ui_screen_change_ex(&aidogui_ui.result.root, LV_SCREEN_LOAD_ANIM_FADE_IN, 300, 0, false, true);
@@ -1338,6 +1491,9 @@ static void handle_menu_key(button_id_t key)
             navigate_to(light ? SCR_SYSTEM_LIGHT : SCR_SYSTEM_DARK,
                         LV_SCREEN_LOAD_ANIM_MOVE_RIGHT);
             break;
+        case 6:
+            open_history_overlay();
+            break;
         default:
             break;
         }
@@ -1433,6 +1589,10 @@ static void handle_system_key(button_id_t key)
 
 static void handle_key(button_id_t key, bool repeat)
 {
+    if (object_ok(s_history_overlay)) {
+        handle_history_key(key, repeat);
+        return;
+    }
     if (s_confirm_mode != CONFIRM_NONE) {
         handle_confirm_key(key, repeat);
         return;

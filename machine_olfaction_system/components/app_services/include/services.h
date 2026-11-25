@@ -13,6 +13,18 @@
 extern "C" {
 #endif
 
+#define HISTORY_MAX_RECORDS 20
+
+typedef struct {
+    uint32_t sequence;
+    float temp_c;
+    float humi_pct;
+    float pressure_hpa;
+    float rs_kohm;
+    bool valid;
+    bool gas_valid;
+} history_record_t;
+
 typedef struct {
     /* BME690 没有 TVOC/eCO2 寄存器；未接 BSEC 时这两个值恒为 NAN。 */
     float tvoc;    /* ppb, NAN = 不可用 */
@@ -36,6 +48,10 @@ void services_update(void);
 
 void sensor_get(sensor_data_t *out);
 const char *sensor_status_text(void);
+
+bool history_capture_current(void);
+int history_count(void);
+bool history_get(int newest_index, history_record_t *out);
 
 bool net_wifi_enabled(void);
 void net_wifi_set_enabled(bool en);
