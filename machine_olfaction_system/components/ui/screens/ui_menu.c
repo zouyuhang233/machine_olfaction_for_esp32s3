@@ -166,12 +166,12 @@ void ui_menu_screen_init(void)
     lv_obj_set_style_text_align(aidogui_ui.menu.StatusWifi, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.menu.MenuTitle = lv_label_create(aidogui_ui.menu.MenuStage);
     lv_obj_set_width(aidogui_ui.menu.MenuTitle, 100);
-    lv_obj_set_height(aidogui_ui.menu.MenuTitle, 28);
+    lv_obj_set_height(aidogui_ui.menu.MenuTitle, 24);
     lv_obj_set_align(aidogui_ui.menu.MenuTitle, LV_ALIGN_TOP_LEFT);
     lv_obj_set_x(aidogui_ui.menu.MenuTitle, 34);
-    lv_obj_set_y(aidogui_ui.menu.MenuTitle, 0);
+    lv_obj_set_y(aidogui_ui.menu.MenuTitle, 2);
     lv_label_set_text(aidogui_ui.menu.MenuTitle, "菜单");
-    lv_obj_set_style_text_font(aidogui_ui.menu.MenuTitle, &ui_font_ai_ai_font_a2b93e6c2db05d6bbbf6f27d_otf_16, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(aidogui_ui.menu.MenuTitle, &ui_font_prompt_cn_16, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_color(aidogui_ui.menu.MenuTitle, lv_color_hex(0xD7E8EB), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(aidogui_ui.menu.MenuTitle, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(aidogui_ui.menu.MenuTitle, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);

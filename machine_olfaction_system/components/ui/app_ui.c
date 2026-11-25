@@ -232,8 +232,8 @@ static lv_obj_t *menu_scroll_ensure(ui_screen_id_t id)
     if (!object_ok(container)) {
         container = lv_obj_create(stage);
         lv_obj_remove_style_all(container);
-        lv_obj_set_size(container, 216, 188);
-        lv_obj_set_pos(container, 12, 46);
+        lv_obj_set_size(container, 216, 200);
+        lv_obj_set_pos(container, 12, 34);
         lv_obj_add_flag(container, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_remove_flag(container, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_set_scroll_dir(container, LV_DIR_VER);
@@ -269,7 +269,7 @@ static lv_obj_t *menu_scroll_ensure(ui_screen_id_t id)
     for (int i = 0; i < 6; i++) {
         if (!object_ok(cards[i])) continue;
         if (lv_obj_get_parent(cards[i]) != container) lv_obj_set_parent(cards[i], container);
-        lv_obj_set_pos(cards[i], 4 + (i % 3) * 72, 16 + (i / 3) * 76);
+        lv_obj_set_pos(cards[i], 4 + (i % 3) * 72, 8 + (i / 3) * 76);
     }
     return container;
 }
@@ -286,7 +286,7 @@ static lv_obj_t *menu_history_ensure(ui_screen_id_t id)
     lv_obj_t *button = lv_obj_create(parent);
     lv_obj_remove_style_all(button);
     lv_obj_set_size(button, 64, 60);
-    lv_obj_set_pos(button, 76, 168);
+    lv_obj_set_pos(button, 76, 160);
     lv_obj_remove_flag(button, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(button, light ? lv_color_hex(0xFFFFFF) : lv_color_hex(0x081217), 0);
     lv_obj_set_style_bg_opa(button, LV_OPA_COVER, 0);
