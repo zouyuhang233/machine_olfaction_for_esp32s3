@@ -97,12 +97,10 @@ static lv_timer_t *s_value_timer;
 static lv_obj_t *s_monitor_root;
 static lv_obj_t *s_monitor_stage;
 static lv_obj_t *s_monitor_chart;
-static lv_chart_series_t *s_monitor_temp_series;
-static lv_chart_series_t *s_monitor_humi_series;
-static lv_chart_series_t *s_monitor_press_series;
 static lv_chart_series_t *s_monitor_rs_series;
 static lv_obj_t *s_monitor_values1;
 static lv_obj_t *s_monitor_values2;
+static lv_obj_t *s_monitor_values3;
 static lv_obj_t *s_monitor_status_wifi;
 static lv_obj_t *s_monitor_status_bt;
 
@@ -523,7 +521,7 @@ static void monitor_screen_init(void)
 
     lv_obj_t *panel = lv_obj_create(s_monitor_stage);
     lv_obj_remove_style_all(panel);
-    lv_obj_set_size(panel, 216, 136);
+    lv_obj_set_size(panel, 216, 124);
     lv_obj_set_pos(panel, 12, 36);
     lv_obj_remove_flag(panel, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(panel, lv_color_hex(0x081217), 0);
@@ -532,41 +530,39 @@ static void monitor_screen_init(void)
     lv_obj_set_style_border_width(panel, 1, 0);
     lv_obj_set_style_border_color(panel, lv_color_hex(0x17323A), 0);
 
-    const char *legend_text[] = {"温度", "湿度", "气压", "气阻"};
-    const lv_color_t legend_color[] = {
-        lv_color_hex(0x22D3EE), lv_color_hex(0x55F2B6),
-        lv_color_hex(0xA78BFA), lv_color_hex(0xFBBF24)
-    };
-    for (int i = 0; i < 4; i++) {
-        lv_obj_t *legend = lv_label_create(panel);
-        lv_obj_set_size(legend, 46, 16);
-        lv_obj_set_pos(legend, 8 + i * 51, 3);
-        lv_label_set_text(legend, legend_text[i]);
-        lv_obj_set_style_text_font(legend, &ui_font_prompt_cn_14, 0);
-        lv_obj_set_style_text_color(legend, legend_color[i], 0);
-        lv_obj_set_style_text_align(legend, LV_TEXT_ALIGN_CENTER, 0);
-    }
+    lv_obj_t *legend = lv_label_create(panel);
+    lv_obj_set_size(legend, 150, 16);
+    lv_obj_set_pos(legend, 8, 3);
+    lv_label_set_text(legend, "气体阻值 (kΩ)");
+    lv_obj_set_style_text_font(legend, &ui_font_prompt_cn_14, 0);
+    lv_obj_set_style_text_color(legend, lv_color_hex(0xFBBF24), 0);
 
     lv_obj_t *axis_100 = lv_label_create(panel);
-    lv_obj_set_pos(axis_100, 2, 22);
+    lv_obj_set_pos(axis_100, 2, 20);
     lv_label_set_text(axis_100, "100");
     lv_obj_set_style_text_font(axis_100, &ui_font_prompt_cn_14, 0);
     lv_obj_set_style_text_color(axis_100, lv_color_hex(0x607780), 0);
 
     lv_obj_t *axis_0 = lv_label_create(panel);
-    lv_obj_set_pos(axis_0, 6, 112);
+    lv_obj_set_pos(axis_0, 6, 98);
     lv_label_set_text(axis_0, "0");
     lv_obj_set_style_text_font(axis_0, &ui_font_prompt_cn_14, 0);
     lv_obj_set_style_text_color(axis_0, lv_color_hex(0x607780), 0);
 
+    lv_obj_t *axis_unit = lv_label_create(panel);
+    lv_obj_set_pos(axis_unit, 2, 54);
+    lv_label_set_text(axis_unit, "kΩ");
+    lv_obj_set_style_text_font(axis_unit, &ui_font_prompt_cn_14, 0);
+    lv_obj_set_style_text_color(axis_unit, lv_color_hex(0x607780), 0);
+
     lv_obj_t *axis_time = lv_label_create(panel);
-    lv_obj_set_pos(axis_time, 166, 113);
+    lv_obj_set_pos(axis_time, 164, 100);
     lv_label_set_text(axis_time, "时间");
     lv_obj_set_style_text_font(axis_time, &ui_font_prompt_cn_14, 0);
     lv_obj_set_style_text_color(axis_time, lv_color_hex(0x607780), 0);
 
     s_monitor_chart = lv_chart_create(panel);
-    lv_obj_set_size(s_monitor_chart, 180, 102);
+    lv_obj_set_size(s_monitor_chart, 180, 92);
     lv_obj_set_pos(s_monitor_chart, 28, 20);
     lv_obj_set_style_bg_color(s_monitor_chart, lv_color_hex(0x081217), 0);
     lv_obj_set_style_bg_opa(s_monitor_chart, LV_OPA_COVER, 0);
@@ -577,38 +573,31 @@ static void monitor_screen_init(void)
     lv_obj_set_style_line_width(s_monitor_chart, 2, LV_PART_ITEMS);
     lv_chart_set_type(s_monitor_chart, LV_CHART_TYPE_LINE);
     lv_chart_set_point_count(s_monitor_chart, 32);
-    lv_chart_set_div_line_count(s_monitor_chart, 5, 7);
+    lv_chart_set_div_line_count(s_monitor_chart, 4, 6);
     lv_chart_set_axis_range(s_monitor_chart, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
-    s_monitor_temp_series = lv_chart_add_series(s_monitor_chart, legend_color[0], LV_CHART_AXIS_PRIMARY_Y);
-    s_monitor_humi_series = lv_chart_add_series(s_monitor_chart, legend_color[1], LV_CHART_AXIS_PRIMARY_Y);
-    s_monitor_press_series = lv_chart_add_series(s_monitor_chart, legend_color[2], LV_CHART_AXIS_PRIMARY_Y);
-    s_monitor_rs_series = lv_chart_add_series(s_monitor_chart, legend_color[3], LV_CHART_AXIS_PRIMARY_Y);
-    lv_chart_set_all_values(s_monitor_chart, s_monitor_temp_series, 0);
-    lv_chart_set_all_values(s_monitor_chart, s_monitor_humi_series, 0);
-    lv_chart_set_all_values(s_monitor_chart, s_monitor_press_series, 0);
+    s_monitor_rs_series = lv_chart_add_series(s_monitor_chart, lv_color_hex(0xFBBF24), LV_CHART_AXIS_PRIMARY_Y);
     lv_chart_set_all_values(s_monitor_chart, s_monitor_rs_series, 0);
 
     s_monitor_values1 = lv_label_create(s_monitor_stage);
-    lv_obj_set_size(s_monitor_values1, 216, 20);
-    lv_obj_set_pos(s_monitor_values1, 12, 176);
-    lv_obj_set_style_text_font(s_monitor_values1, &ui_font_prompt_cn_16, 0);
+    lv_obj_set_size(s_monitor_values1, 216, 16);
+    lv_obj_set_pos(s_monitor_values1, 12, 164);
+    lv_obj_set_style_text_font(s_monitor_values1, &ui_font_prompt_cn_14, 0);
     lv_obj_set_style_text_color(s_monitor_values1, lv_color_hex(0xD7E8EB), 0);
     lv_obj_set_style_text_align(s_monitor_values1, LV_TEXT_ALIGN_CENTER, 0);
 
     s_monitor_values2 = lv_label_create(s_monitor_stage);
-    lv_obj_set_size(s_monitor_values2, 216, 20);
-    lv_obj_set_pos(s_monitor_values2, 12, 196);
-    lv_obj_set_style_text_font(s_monitor_values2, &ui_font_prompt_cn_16, 0);
+    lv_obj_set_size(s_monitor_values2, 216, 16);
+    lv_obj_set_pos(s_monitor_values2, 12, 182);
+    lv_obj_set_style_text_font(s_monitor_values2, &ui_font_prompt_cn_14, 0);
     lv_obj_set_style_text_color(s_monitor_values2, lv_color_hex(0xB8CDD2), 0);
     lv_obj_set_style_text_align(s_monitor_values2, LV_TEXT_ALIGN_CENTER, 0);
 
-    lv_obj_t *hint = lv_label_create(s_monitor_stage);
-    lv_obj_set_size(hint, 216, 16);
-    lv_obj_set_pos(hint, 12, 218);
-    lv_label_set_text(hint, "左键返回主页");
-    lv_obj_set_style_text_font(hint, &ui_font_prompt_cn_14, 0);
-    lv_obj_set_style_text_color(hint, lv_color_hex(0x91AAB0), 0);
-    lv_obj_set_style_text_align(hint, LV_TEXT_ALIGN_CENTER, 0);
+    s_monitor_values3 = lv_label_create(s_monitor_stage);
+    lv_obj_set_size(s_monitor_values3, 216, 16);
+    lv_obj_set_pos(s_monitor_values3, 12, 200);
+    lv_obj_set_style_text_font(s_monitor_values3, &ui_font_prompt_cn_14, 0);
+    lv_obj_set_style_text_color(s_monitor_values3, lv_color_hex(0xB8CDD2), 0);
+    lv_obj_set_style_text_align(s_monitor_values3, LV_TEXT_ALIGN_CENTER, 0);
 
     refresh_values_for(SCR_MONITOR);
 }
@@ -1482,30 +1471,29 @@ static void refresh_monitor(void)
     sensor_data_t d;
     sensor_get(&d);
 
-    int temp_value = monitor_norm(d.valid ? d.temp : NAN, 0.0f, 50.0f);
-    int humi_value = monitor_norm(d.valid ? d.humi : NAN, 0.0f, 100.0f);
-    int press_value = monitor_norm(d.valid ? d.press : NAN, 950.0f, 1050.0f);
-    int rs_value = monitor_norm(d.gas_valid ? d.rs : NAN, 0.0f, 200.0f);
-
+    int rs_value = monitor_norm(d.gas_valid ? d.rs : NAN, 0.0f, 100.0f);
     if (object_ok(s_monitor_chart)) {
-        lv_chart_set_next_value(s_monitor_chart, s_monitor_temp_series, temp_value);
-        lv_chart_set_next_value(s_monitor_chart, s_monitor_humi_series, humi_value);
-        lv_chart_set_next_value(s_monitor_chart, s_monitor_press_series, press_value);
         lv_chart_set_next_value(s_monitor_chart, s_monitor_rs_series, rs_value);
     }
 
-    char line1[64], line2[64];
-    if (d.valid && isfinite(d.temp)) snprintf(line1, sizeof(line1), "温 %.1f°C    湿 %.0f%%", d.temp, d.humi);
-    else snprintf(line1, sizeof(line1), "温 --    湿 --");
-    if (d.valid && isfinite(d.press) && d.gas_valid && isfinite(d.rs)) {
-        snprintf(line2, sizeof(line2), "压 %.0f hPa    阻 %.1f kΩ", d.press, d.rs);
-    } else if (d.valid && isfinite(d.press)) {
-        snprintf(line2, sizeof(line2), "压 %.0f hPa    阻 --", d.press);
+    char line1[64], line2[64], line3[64];
+    if (d.valid && isfinite(d.temp) && isfinite(d.humi)) {
+        snprintf(line1, sizeof(line1), "温度 %.1f°C    湿度 %.0f%%", d.temp, d.humi);
     } else {
-        snprintf(line2, sizeof(line2), "压 --    阻 --");
+        snprintf(line1, sizeof(line1), "温度 --    湿度 --");
     }
+    if (d.valid && isfinite(d.press) && d.gas_valid && isfinite(d.rs)) {
+        snprintf(line2, sizeof(line2), "气压 %.0f hPa    气阻 %.1f kΩ", d.press, d.rs);
+    } else if (d.valid && isfinite(d.press)) {
+        snprintf(line2, sizeof(line2), "气压 %.0f hPa    气阻 --", d.press);
+    } else {
+        snprintf(line2, sizeof(line2), "气压 --    气阻 --");
+    }
+    if (isfinite(d.tvoc)) snprintf(line3, sizeof(line3), "响应 %.2f    TVOC %.0f", d.tvoc / 300.0f, d.tvoc);
+    else snprintf(line3, sizeof(line3), "响应 --    TVOC --");
     set_label_text(s_monitor_values1, line1);
     set_label_text(s_monitor_values2, line2);
+    set_label_text(s_monitor_values3, line3);
 }
 
 static void refresh_sensor(ui_screen_id_t id)
