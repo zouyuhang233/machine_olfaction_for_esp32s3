@@ -149,17 +149,6 @@ void ui_screen1_screen_init(void)
     lv_obj_set_style_radius(aidogui_ui.screen1.BrandMarkCore, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(aidogui_ui.screen1.BrandMarkCore, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(aidogui_ui.screen1.BrandMarkCore, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    aidogui_ui.screen1.BrandCN = lv_label_create(aidogui_ui.screen1.HomeStage);
-    lv_obj_set_width(aidogui_ui.screen1.BrandCN, 100);
-    lv_obj_set_height(aidogui_ui.screen1.BrandCN, 20);
-    lv_obj_set_align(aidogui_ui.screen1.BrandCN, LV_ALIGN_TOP_LEFT);
-    lv_obj_set_x(aidogui_ui.screen1.BrandCN, 34);
-    lv_obj_set_y(aidogui_ui.screen1.BrandCN, 4);
-    lv_label_set_text(aidogui_ui.screen1.BrandCN, "机器嗅觉");
-    lv_obj_set_style_text_font(aidogui_ui.screen1.BrandCN, &ui_font_ai_ai_font_a2b93e6c2db05d6bbbf6f27d_otf_12, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_color(aidogui_ui.screen1.BrandCN, lv_color_hex(0x7D8C95), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(aidogui_ui.screen1.BrandCN, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_align(aidogui_ui.screen1.BrandCN, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
     aidogui_ui.screen1.StatusBattery = lv_label_create(aidogui_ui.screen1.HomeStage);
     lv_obj_set_width(aidogui_ui.screen1.StatusBattery, 20);
     lv_obj_set_height(aidogui_ui.screen1.StatusBattery, 22);
@@ -599,7 +588,6 @@ void ui_screen1_screen_init(void)
     lv_obj_add_event_cb(aidogui_ui.screen1.TopRule, _ui_object_deleted, LV_EVENT_DELETE, &aidogui_ui.screen1.TopRule);
     lv_obj_add_event_cb(aidogui_ui.screen1.BrandMarkRing, _ui_object_deleted, LV_EVENT_DELETE, &aidogui_ui.screen1.BrandMarkRing);
     lv_obj_add_event_cb(aidogui_ui.screen1.BrandMarkCore, _ui_object_deleted, LV_EVENT_DELETE, &aidogui_ui.screen1.BrandMarkCore);
-    lv_obj_add_event_cb(aidogui_ui.screen1.BrandCN, _ui_object_deleted, LV_EVENT_DELETE, &aidogui_ui.screen1.BrandCN);
     lv_obj_add_event_cb(aidogui_ui.screen1.StatusBattery, _ui_object_deleted, LV_EVENT_DELETE, &aidogui_ui.screen1.StatusBattery);
     lv_obj_add_event_cb(aidogui_ui.screen1.StatusBluetooth, _ui_object_deleted, LV_EVENT_DELETE, &aidogui_ui.screen1.StatusBluetooth);
     lv_obj_add_event_cb(aidogui_ui.screen1.StatusWifi, _ui_object_deleted, LV_EVENT_DELETE, &aidogui_ui.screen1.StatusWifi);

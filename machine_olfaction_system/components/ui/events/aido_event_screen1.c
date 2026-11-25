@@ -95,7 +95,6 @@ void aido_event_init_screen1(aidogui_ui_t * ui)
     aido_flow_observe(aidogui_ui.screen1.TopRule);
     aido_flow_observe(aidogui_ui.screen1.BrandMarkRing);
     aido_flow_observe(aidogui_ui.screen1.BrandMarkCore);
-    aido_flow_observe(aidogui_ui.screen1.BrandCN);
     aido_flow_observe(aidogui_ui.screen1.StatusBattery);
     aido_flow_observe(aidogui_ui.screen1.StatusBluetooth);
     aido_flow_observe(aidogui_ui.screen1.StatusWifi);

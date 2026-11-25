@@ -13,7 +13,6 @@ typedef struct {
     lv_obj_t * TopRule;
     lv_obj_t * BrandMarkRing;
     lv_obj_t * BrandMarkCore;
-    lv_obj_t * BrandCN;
     lv_obj_t * StatusBattery;
     lv_obj_t * StatusBluetooth;
     lv_obj_t * StatusWifi;

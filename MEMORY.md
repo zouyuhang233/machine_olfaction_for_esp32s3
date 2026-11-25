@@ -177,7 +177,7 @@ BME690 寄存器只给 **gas resistance Rs、温度、湿度、气压**。
 - 分区：nvs 24K / phy_init 4K / factory(app) 4M / storage(fat) ~11.7M / coredump 512K。
 - **`CONFIG_ESPTOOLPY_FLASHMODE_QIO=y` 但 `ESPTOOLPY_FLASHMODE="dio"` 不是 bug**（烧写用 dio，启动自升 QIO）。
 - **`FREERTOS_HZ=1000` 是硬需求**：Modbus RTU 帧间静默 ≥3.5 字符 = 4ms@115200；100Hz tick 下 `pdMS_TO_TICKS(4)` 会退化成 10ms。
-- **2026-11-24 构建/烧录通过**：`machine_olfaction_system.bin` **842,272 B**（app 分区剩余 80%，含 BME690、240×240 UI 与星系吸收动效）。
+- **2026-11-24 构建/烧录通过**：`machine_olfaction_system.bin` **842,096 B**（app 分区剩余 80%，含 BME690、240×240 UI 与星系吸收动效）。
 - **代码结构**（2026-11-24）：`main/app_main.c`（组装）+ `components/bsp|lcd|font`（底层显示）+ `components/bme690`（I²C + Bosch API）+ `components/buttons`（4 键）+ `components/lvgl_port`（LVGL 9.4 XRGB8888 移植）+ `components/app_services`（BME690 采集任务 / 其余服务模拟 / NVS）+ `components/ui`（`lvgl_ui` 导出页面 + 4 键适配 + `galaxy_effect.c` 星系粒子）。
 - **SPI 必须开 DMA**：CPU 模式单次上限 64 字节，而 240 像素 RGB565 一行 480 字节；见 4.3。
 - 业务代码进度：显示子系统 ✅；LVGL 原生 240×240 UI ✅；4 键 ✅；BME690 实机采集 ✅；推理、Modbus、真实 Wi‑Fi/BLE/音频 ❌ 未开始。
@@ -348,7 +348,7 @@ BME690 寄存器只给 **gas resistance Rs、温度、湿度、气压**。
 | BME690 实机 | `components/bme690` 使用 ESP-IDF I²C（GPIO8/18，100 kHz，0x76）+ Bosch BME690 SensorAPI v1.1.0；读得 `Chip_Id=0x61 / Variant_Id=0x02`，温湿度、气压、300℃/100ms forced Rs 周期采集正常。 |
 | 服务层 | `services` 独立任务每秒测量一次；UI 只读缓存；无 BSEC 时 TVOC/eCO2 为 `NAN` 并显示 `--`，`rs` 单位 kΩ。 |
 | 文档/BOM | 新建 `器件文档/1.54寸TFT彩屏_ST7789_240x240/`；旧 1.8 寸目录移出工作区；BOM V1.1 更新为 782.19 元。 |
-| 构建验证 | 正式固件 842,272 B，已烧录 COM7；最终启动无 WDT、无栈溢出。 |
+| 构建验证 | 正式固件 842,096 B，已烧录 COM7；最终启动无 WDT、无栈溢出。 |
 
 ### 2026-11-24 BME690 驱动 + 使用调试指南
 
@@ -379,4 +379,4 @@ BME690 寄存器只给 **gas resistance Rs、温度、湿度、气压**。
 | 页面节奏 | 首页约 0.62 倍慢速吸收；检测页约 2.85 倍快速吸收并提升亮度；结果页约 0.38 倍缓落；菜单/设置页关闭以免干扰文字和焦点。 |
 | 层级 | 动效挂到对应 Stage 最底层，现有圆环、文字、焦点环、按钮始终在其上方。 |
 | 稳定性 | 自检巡完 17 页无 panic/WDT；切页后粒子层被安全销毁并按需重建，内存无持续增长。 |
-| 构建 | 2026-11-24 正式构建 **842,272 B（0xcda20）**，已烧录 COM7。 |
+| 构建 | 2026-11-24 正式构建 **842,096 B（0xcd970）**，已烧录 COM7。 |
