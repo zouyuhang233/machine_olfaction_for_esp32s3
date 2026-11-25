@@ -865,6 +865,14 @@ static void navigate_to(ui_screen_id_t target, int animation)
     default:
         break;
     }
+    lv_obj_t *target_root = screen_root_for(target);
+    if (object_ok(target_root)) {
+        lv_obj_update_layout(target_root);
+        lv_obj_invalidate(target_root);
+        if (target == SCR_SENSOR_DARK || target == SCR_SENSOR_LIGHT) {
+            lv_refr_now(NULL);
+        }
+    }
     s_input_lock_until = lv_tick_get() + SCREEN_LOCK_MS;
 }
 

@@ -46,6 +46,11 @@ void ui_sensordark_screen_init(void)
     lv_obj_remove_flag(aidogui_ui.sensordark.root, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_size(aidogui_ui.sensordark.root, 240, 240);
     }
+    lv_obj_set_style_bg_color(aidogui_ui.sensordark.root, lv_color_hex(0x05080C), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(aidogui_ui.sensordark.root, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(aidogui_ui.sensordark.root, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(aidogui_ui.sensordark.root, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_all(aidogui_ui.sensordark.root, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     ui_sensordark_content_ready = true;
     /* 按父子关系创建控件，然后设置属性、样式及事件。 */
     aidogui_ui.sensordark.PageStage = lv_obj_create(aidogui_ui.sensordark.root);
@@ -57,7 +62,9 @@ void ui_sensordark_screen_init(void)
     lv_obj_remove_flag(aidogui_ui.sensordark.PageStage, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_text_font(aidogui_ui.sensordark.PageStage, &ui_font__aidogui_default_alibaba__16, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_color(aidogui_ui.sensordark.PageStage, lv_color_hex(0x05080C), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(aidogui_ui.sensordark.PageStage, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(aidogui_ui.sensordark.PageStage, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_opa(aidogui_ui.sensordark.PageStage, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_remove_flag(aidogui_ui.sensordark.PageStage, LV_OBJ_FLAG_HIDDEN);
     lv_obj_set_style_border_width(aidogui_ui.sensordark.PageStage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_left(aidogui_ui.sensordark.PageStage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(aidogui_ui.sensordark.PageStage, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
