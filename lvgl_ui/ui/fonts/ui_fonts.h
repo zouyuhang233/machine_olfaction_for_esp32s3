@@ -35,6 +35,7 @@ LV_FONT_DECLARE(ui_font_prompt_cn_14);
 LV_FONT_DECLARE(ui_font_prompt_cn_16);
 LV_FONT_DECLARE(ui_font_prompt_cn_20);
 LV_FONT_DECLARE(ui_font_status_badge_9);
+LV_FONT_DECLARE(ui_font_history_24);
 
 /* 创建屏幕前加载字体；失败会回收已加载资源。点阵 C 数组直接返回 true。 */
 bool aidogui_fonts_init(void);

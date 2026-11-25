@@ -93,6 +93,8 @@ static lv_obj_t *s_confirm_labels[2];
 static lv_timer_t *s_input_timer;
 static lv_timer_t *s_value_timer;
 
+static lv_obj_t *s_menu_scroll_dark;
+static lv_obj_t *s_menu_scroll_light;
 static lv_obj_t *s_history_button_dark;
 static lv_obj_t *s_history_button_light;
 static lv_obj_t *s_history_overlay;
@@ -219,31 +221,94 @@ static int default_focus_for(ui_screen_id_t id)
     return 0;
 }
 
+static lv_obj_t *menu_scroll_ensure(ui_screen_id_t id)
+{
+    bool light = id == SCR_MENU_LIGHT;
+    lv_obj_t **slot = light ? &s_menu_scroll_light : &s_menu_scroll_dark;
+    lv_obj_t *stage = light ? aidogui_ui.menulight.MenuLightStage : aidogui_ui.menu.MenuStage;
+    if (!object_ok(stage)) return NULL;
+
+    lv_obj_t *container = *slot;
+    if (!object_ok(container)) {
+        container = lv_obj_create(stage);
+        lv_obj_remove_style_all(container);
+        lv_obj_set_size(container, 216, 188);
+        lv_obj_set_pos(container, 12, 46);
+        lv_obj_add_flag(container, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_remove_flag(container, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_set_scroll_dir(container, LV_DIR_VER);
+        lv_obj_set_scrollbar_mode(container, LV_SCROLLBAR_MODE_ACTIVE);
+        lv_obj_set_style_bg_opa(container, LV_OPA_TRANSP, 0);
+        lv_obj_set_style_border_width(container, 0, 0);
+        lv_obj_set_style_pad_all(container, 0, 0);
+        lv_obj_set_style_pad_row(container, 0, 0);
+        lv_obj_set_style_pad_column(container, 0, 0);
+        lv_obj_set_style_width(container, 4, LV_PART_SCROLLBAR);
+        lv_obj_set_style_bg_color(container, light ? lv_color_hex(0x6A8C84) : lv_color_hex(0x22D3EE), LV_PART_SCROLLBAR);
+        lv_obj_set_style_bg_opa(container, 120, LV_PART_SCROLLBAR);
+        lv_obj_set_style_radius(container, 2, LV_PART_SCROLLBAR);
+        *slot = container;
+    }
+
+    lv_obj_t *cards[6];
+    if (light) {
+        cards[0] = aidogui_ui.menulight.LightSensor;
+        cards[1] = aidogui_ui.menulight.LightNetwork;
+        cards[2] = aidogui_ui.menulight.LightBle;
+        cards[3] = aidogui_ui.menulight.LightAudio;
+        cards[4] = aidogui_ui.menulight.LightDisplay;
+        cards[5] = aidogui_ui.menulight.LightSystem;
+    } else {
+        cards[0] = aidogui_ui.menu.MenuSensor;
+        cards[1] = aidogui_ui.menu.MenuNetwork;
+        cards[2] = aidogui_ui.menu.MenuBle;
+        cards[3] = aidogui_ui.menu.MenuAudio;
+        cards[4] = aidogui_ui.menu.MenuDisplay;
+        cards[5] = aidogui_ui.menu.MenuSystem;
+    }
+    for (int i = 0; i < 6; i++) {
+        if (!object_ok(cards[i])) continue;
+        if (lv_obj_get_parent(cards[i]) != container) lv_obj_set_parent(cards[i], container);
+        lv_obj_set_pos(cards[i], 4 + (i % 3) * 72, 16 + (i / 3) * 76);
+    }
+    return container;
+}
+
 static lv_obj_t *menu_history_ensure(ui_screen_id_t id)
 {
     bool light = id == SCR_MENU_LIGHT;
     lv_obj_t **slot = light ? &s_history_button_light : &s_history_button_dark;
     if (object_ok(*slot)) return *slot;
 
-    lv_obj_t *parent = light ? aidogui_ui.menulight.MenuLightStage : aidogui_ui.menu.MenuStage;
+    lv_obj_t *parent = menu_scroll_ensure(id);
     if (!object_ok(parent)) return NULL;
 
     lv_obj_t *button = lv_obj_create(parent);
     lv_obj_remove_style_all(button);
-    lv_obj_set_size(button, 208, 24);
-    lv_obj_set_pos(button, 16, 204);
+    lv_obj_set_size(button, 64, 60);
+    lv_obj_set_pos(button, 76, 168);
     lv_obj_remove_flag(button, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(button, light ? lv_color_hex(0xFFFFFF) : lv_color_hex(0x081217), 0);
     lv_obj_set_style_bg_opa(button, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(button, 8, 0);
+    lv_obj_set_style_radius(button, 10, 0);
     lv_obj_set_style_border_width(button, 1, 0);
     lv_obj_set_style_border_color(button, light ? lv_color_hex(0xB8CCC7) : lv_color_hex(0x17323A), 0);
 
+    lv_obj_t *icon = lv_label_create(button);
+    lv_obj_set_size(icon, 56, 26);
+    lv_obj_set_pos(icon, 4, 10);
+    lv_label_set_text(icon, "\xEE\xA0\x9C");
+    lv_obj_set_style_text_font(icon, &ui_font_history_24, 0);
+    lv_obj_set_style_text_color(icon, light ? lv_color_hex(0x3F6C72) : lv_color_hex(0x8BEFD2), 0);
+    lv_obj_set_style_text_align(icon, LV_TEXT_ALIGN_CENTER, 0);
+
     lv_obj_t *label = lv_label_create(button);
-    lv_label_set_text(label, "历史检测记录");
-    lv_obj_set_style_text_font(label, &ui_font_prompt_cn_16, 0);
+    lv_obj_set_size(label, 56, 16);
+    lv_obj_set_pos(label, 4, 40);
+    lv_label_set_text(label, "历史");
+    lv_obj_set_style_text_font(label, &ui_font_prompt_cn_14, 0);
     lv_obj_set_style_text_color(label, light ? lv_color_hex(0x17373D) : lv_color_hex(0xD7E8EB), 0);
-    lv_obj_center(label);
+    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
     *slot = button;
     return button;
 }
@@ -488,6 +553,7 @@ static void focus_update(bool animate)
     s_focus_target = target;
     focus_ring_apply_theme();
     lv_obj_remove_flag(s_focus_ring, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_scroll_to_view(target, LV_ANIM_OFF);
     focus_ring_position();
     if (changed || animate) {
         lv_anim_delete(s_focus_ring, NULL);
