@@ -31,6 +31,7 @@ LV_FONT_DECLARE(ui_font_ai_ai_font_a2b93e6c2db05d6bbbf6f27d_otf_20);
 LV_FONT_DECLARE(ui_font_ai_ai_font_a2b93e6c2db05d6bbbf6f27d_otf_10);
 LV_FONT_DECLARE(ui_font_ai_ai_font_a2efc8b8e51fbd031a7142a1_ttf_24);
 LV_FONT_DECLARE(ui_font_ai_ai_font_600ee36d62d930b6186ed561_ttf_16);
+LV_FONT_DECLARE(ui_font_prompt_cn_12);
 LV_FONT_DECLARE(ui_font_prompt_cn_14);
 LV_FONT_DECLARE(ui_font_prompt_cn_16);
 LV_FONT_DECLARE(ui_font_prompt_cn_20);
