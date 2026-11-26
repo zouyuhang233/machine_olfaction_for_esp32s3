@@ -14,6 +14,12 @@
 | 6 | [测试与排障](TESTING_AND_TROUBLESHOOTING.md) | 复现问题、验收和排障人员 |
 | 7 | [项目记忆](../MEMORY.md) | 需要历史决策和踩坑记录的人 |
 
+## 外部网站
+
+- [智能公元平台](https://www.smartpi.cn/)
+- [机芯智能帮助文档](http://help.aimachip.com/)
+- [SU-03T 官方资料页](https://docs.aimachip.com/zh-cn/latest/file/offlineVoice/SU03T.html)
+
 ## 按主题查找
 
 ### 固件与构建
